@@ -1,0 +1,5 @@
+AddHandler mod_python .py
+PythonHandler handler
+PythonDebug On 
+PythonPath "[os.path.dirname(__file__)] + sys.path"
+
