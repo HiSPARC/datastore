@@ -7,10 +7,8 @@ __date__ ="$17-sep-2009 9:22:35$"
 from fcntl import flock
 import csv
 import definesHdf5
-from numarray import *
 import tables
 from tables.file import openFile
-from tables.nra import *
 
 class HisparcClusters(tables.IsDescription):
 	station_id = tables.UInt32Col(pos=1)
@@ -115,9 +113,9 @@ class HisparcWTRdata(tables.IsDescription):
 
 def get_clusters(datafile):
     csvFile = csv.reader(open(datafile), delimiter=',', quotechar='"')
-    clusters = []
+    clusters = set()
     for row in csvFile:
-        clusters.append(row[0])
+        clusters.add(row[1])
     return clusters
        
 def initialize_clusters(datafile):

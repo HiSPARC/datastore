@@ -5,7 +5,7 @@
 # define database structure
 DATAFILE = "2009_3_22.h5"
 # DATAFILE = "databaseStructure.h5"
-DATA_ROOT_DIR ="/home/ooti/Code/DATABASE INTEGRATION TEST/filesystem"
+DATA_ROOT_DIR ="/tmp/filesystem"
 DATAFILE_CLUSTERS = DATA_ROOT_DIR+"/clusters.h5"
 NEWDATAFILE="database.h5"
 DATAFILE_DAVID = "data_david.h5"
