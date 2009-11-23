@@ -11,7 +11,8 @@ import datetime
 log_fhandler = logging.FileHandler("/tmp/hisparc_uploadHANDLER")
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s:%(message)s")
 log_fhandler.setFormatter(formatter)
-logger = logging.getLogger()logger.name = "main"
+logger = logging.getLogger()
+logger.name = "main"
 logger.addHandler(log_fhandler)
 logger.setLevel(logging.INFO)
 
@@ -53,7 +54,7 @@ def handler(req):
         if our_checksum == checksum:
             try:
                 event_list = loads(data)
-            except UnpicklingError:
+            except (UnpicklingError, AttributeError):
                 returncode = RC_ISE_INV_POSTDATA
                 #req.write('debuginfo: RC_ISE_INV_POSTDATA')
             else:
