@@ -65,7 +65,8 @@ def handler(req):
 			logger.info("\n => RETURN CODE : `%s' " % ( returncode))
 			
 		except Exception, msg:
-			req.write(repr(msg))
+                        logger.error(repr(msg))
+                        returncode = RC_PE_TRANS_FAILED
         else:
             returncode = RC_PE_INV_AUTHCODE
 

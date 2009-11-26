@@ -51,14 +51,11 @@ def get_cluster(station_id):
     except IOError:
 	print "Cannot open file: %s" % (DATAFILE_CLUSTERS)
         result = -1
-        dataFile.flush()
-        dataFile.close()
     except IndexError:
         print "No station with such id present in file: %s" % (DATAFILE_CLUSTERS)
         result = -1
-        dataFile.flush()
+    finally:
         dataFile.close()
-    dataFile.close()
     return result
 '''
 Stores an event in the h5 filesystem.
@@ -176,7 +173,7 @@ def store_event_list(station_id, password, event_list):
   
         # check all subgroups by eventtype_uploadcode
         cluster = get_cluster(station_id)
-        clusterName = 'cluster'+str(cluster)
+        clusterName = 'cluster_' + cluster.lower()
         clusterSubgroup = H5file.getNode("/hisparc/", clusterName)
 
         # Now we look at what kind of event this is

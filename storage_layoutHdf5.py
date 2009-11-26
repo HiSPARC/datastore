@@ -12,7 +12,7 @@ from tables.file import openFile
 
 class HisparcClusters(tables.IsDescription):
 	station_id = tables.UInt32Col(pos=1)
-        cluster_id = tables.UInt32Col(pos=2)
+        cluster_id = tables.StringCol(40, pos=2)
         password = tables.StringCol(20, pos=3)
 	description = tables.StringCol(20, pos=4)
         
@@ -143,7 +143,7 @@ def initialize_database(datafile):
     clusters = get_clusters(definesHdf5.CSV_CLUSTERS)
 
     for cluster_id in clusters:
-        cluster = data.createGroup(hisparc, "cluster"+(cluster_id), 'HiSPARC cluster '+str(cluster_id))
+        cluster = data.createGroup(hisparc, "cluster_"+(cluster_id.lower()), 'HiSPARC cluster '+cluster_id)
 
         # CIC
         CIC = data.createGroup(cluster, "CIC", "HiSPARC Coincidence group" )
