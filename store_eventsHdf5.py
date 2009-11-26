@@ -27,7 +27,8 @@ from LockMechanism import *
 log_fhandler = logging.FileHandler("/tmp/hisparc_upload")
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s:%(message)s")
 log_fhandler.setFormatter(formatter)
-logger = logging.getLogger()logger.name = "main"
+logger = logging.getLogger()
+logger.name = "main"
 logger.addHandler(log_fhandler)
 logger.setLevel(logging.INFO)
 
@@ -59,7 +60,7 @@ def get_cluster(station_id):
         dataFile.close()
     dataFile.close()
     return result
-'''
+'''
 Stores an event in the h5 filesystem.
 @param dataFile- the h5 file in which to store the event
 @param eventtype- the type of the event
@@ -126,7 +127,8 @@ def storeEvent(dataFile, eventtype, eventheader, eventdatalist, eventGroup, stat
 		print "**********************************************\n/!\ Problem while inserting event data /!\ \n\t %s\n**********************************************" % msg
 		logger.error("\n => PROBLEM WHILE INSERTING EVENT : `%s'       %s " % ( data_uploadcode,msg))
 		
-		return RC_PE_INV_UPCODE	return RC_OK
+		return RC_PE_INV_UPCODE
+        return RC_OK
 
 
 '''
