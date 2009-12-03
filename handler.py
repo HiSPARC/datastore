@@ -7,6 +7,7 @@ from md5_sum import md5_sum
 import logging
 import sys
 import datetime
+import traceback
 
 log_fhandler = logging.FileHandler("/tmp/hisparc_uploadHANDLER")
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s:%(message)s")
@@ -65,7 +66,7 @@ def handler(req):
 			logger.info("\n => RETURN CODE : `%s' " % ( returncode))
 			
 		except Exception, msg:
-                        logger.error(repr(msg))
+                        logger.error(traceback.format_exc())
                         returncode = RC_PE_TRANS_FAILED
         else:
             returncode = RC_PE_INV_AUTHCODE

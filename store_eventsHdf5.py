@@ -1,16 +1,14 @@
 import sys
 import os.path
+import calendar
+import base64
 
-#import apache
 import rcodesHdf5
-from definities import *
 from rcodesHdf5 import *
 
 
-#import os
 from tables import *
 import logging
-#import storage_layoutHdf5
 from storage_layoutHdf5 import initialize_clusters
 import datetime
 import random
@@ -18,6 +16,7 @@ from os import makedirs, access, F_OK, path
 #import fcntl
 from fcntl import *
 from LockMechanism import *
+from upload_codes import eventtype_upload_codes
 
 ################################
 
@@ -57,75 +56,87 @@ def get_cluster(station_id):
     finally:
         dataFile.close()
     return result
-'''
-Stores an event in the h5 filesystem.
-@param dataFile- the h5 file in which to store the event
-@param eventtype- the type of the event
-@param eventheader- the header of the event
-@param eventdatalist- the data associated to the event
-@param eventGroup- the node in which to store the event in the h5 file
-@param station_id- the id of the station this event belongs to
-'''
-def storeEvent(dataFile, eventtype, eventheader, eventdatalist, eventGroup, station_id):
-       # at this point, we were given a event group (eventGroup) in which to store a list of data (eventdatalist)
-	try:
-		#get a handler to the table in which to insert the new event's data
-		eventDataTable = dataFile.getNode(eventGroup, eventtype+'Eventdata')
-	except Exception, msg:
-		logger.error("\nPROBLEM WHILE OPENING H5FILE : `%s'" % str(msg))
-		return RC_PE_TRANS_FAILED
-		
-	#get the new event ID (size of table + 1 )
-	event_id = eventDataTable.nrows + 1
 
-	#prepare the new record
-	newRow = eventDataTable.row
-	newRow['event_id'] = str(event_id)
-	newRow['station_id'] = station_id
-	newRow['nanoseconds'] = long(eventheader['nanoseconds'])
-	newRow['time'] = eventheader['datetime'].time()
+def store_event(datafile, eventtype, eventheader, eventdatalist,
+                eventgroup, station_id):
+    """Stores an event in the h5 filesystem
 
-	try:	
-		for datalist in eventdatalist:
-		    data_uploadcode = datalist['data_uploadcode']
-		    logger.info("data type being inserted : `%s'\n" % \
-		        str(data_uploadcode))
-		    data = datalist['data']
-		    # THIS CONDITION SHOULD INCLUDE ALL THE EVENT DATA TYPES CONTAINING A BLOB
-		    # IF YOU HAD A NEW EVENT DATA TYPE, BE SURE TO ADD ITS HANDLER HERE
-		    if data_uploadcode in ['TR1', 'TR2', 'TR3', 'TR4', 'SST', 'ERRMSG']:
-			# DATA NEEDING A POINTER TO A TRACE
-			#we insert the blobs associated with the event
-			BLOBS = dataFile.getNode(eventGroup, 'BLOBS')
-			BLOBS.append(data)
-			BLOBS.flush()
-			#we store a pointer to this blob in the event table
-			trace_idx = len(BLOBS)
-			if(data_uploadcode in ['SST', 'ERRMSG']):
-			    newRow[data_uploadcode] = trace_idx
-			else:
-			    nbTr = int(data_uploadcode[2])-1
-			    recordSet = newRow['TR']
-			    recordSet[nbTr] = trace_idx
-			    newRow['TR'] = recordSet
-		    elif data_uploadcode[:2] in ['PH', 'IN', 'BL', 'NP']:
-			# COLUMNS WITH INNER ARRAY
-			nbPh = int(data_uploadcode[2])-1
-			recordSet = newRow[data_uploadcode[:2]]
-			recordSet[nbPh] = data
-			newRow[data_uploadcode[:2]] = recordSet
-		    else:
-			# THE REST
-			newRow[data_uploadcode] = data
+    :param datafile: the h5 file in which to store the event
+    :param eventtype: the type of the event
+    :param eventheader: the header of the event
+    :param eventdatalist: the data associated to the event
+    :param eventgroup: the node in which to store the event in the h5 file
+    :param station_id: the id of the station this event belongs to
 
-		newRow.append()
-		eventDataTable.flush()
-	except Exception, msg:
-		print "**********************************************\n/!\ Problem while inserting event data /!\ \n\t %s\n**********************************************" % msg
-		logger.error("\n => PROBLEM WHILE INSERTING EVENT : `%s'       %s " % ( data_uploadcode,msg))
-		
-		return RC_PE_INV_UPCODE
-        return RC_OK
+    """
+    upload_codes = eventtype_upload_codes[eventtype]
+    table = datafile.getNode(eventgroup,
+                             upload_codes['tablename'])
+    blobs = datafile.getNode(eventgroup, 'blobs')
+
+    row = table.row
+    row['event_id'] = table.nrows + 1
+    row['station_id'] = station_id
+    # make a unix-like timestamp
+    timestamp = calendar.timegm(eventheader['datetime'].utctimetuple())
+    nanoseconds = eventheader['nanoseconds']
+    # make an extended timestamp, which is the number of nanoseconds since
+    # epoch
+    ext_timestamp = timestamp * long(1e9) + nanoseconds
+    row['timestamp'] = timestamp
+    row['nanoseconds'] = nanoseconds
+    row['ext_timestamp'] = ext_timestamp
+
+    # get default values for the data
+    data = {}
+    for key, value in upload_codes.items():
+        if key not in ['tablename', 'blobs']:
+            data[key] = row[value]
+
+    # process event data
+    for item in eventdatalist:
+        # uploadcode: EVENTRATE, PH1, IN3, etc.
+        uploadcode = item['data_uploadcode']
+        # value: actual data value
+        value = item['data']
+
+        if data_is_blob(uploadcode, upload_codes['blobs']):
+            # data should be stored inside the blob array, ...
+            if uploadcode[:-1] == 'TR':
+                # traces are base64 encoded
+                value = base64.decodestring(value)
+            blobs.append(value)
+            # ... with a pointer stored in the event table
+            value = len(blobs) - 1
+
+        if uploadcode[-1].isdigit():
+            # uploadcode: PH1, IN3, etc.
+            key, index = uploadcode[:-1], int(uploadcode[-1]) - 1
+            data[key][index] = value
+        else:
+            # uploadcode: EVENTRATE, RED, etc.
+            data[uploadcode] = value
+
+    # write data values to row
+    for key, value in upload_codes.items():
+        if key not in ['tablename', 'blobs']:
+            row[value] = data[key]
+
+    row.append()
+    table.flush()
+    blobs.flush()
+
+    return RC_OK
+
+def data_is_blob(uploadcode, blob_types):
+    """Determine if data is a variable length binary value (blob)"""
+
+    if uploadcode[-1].isdigit():
+        if uploadcode[:-1] in blob_types:
+            return True
+    elif uploadcode in blob_types:
+        True
+    return False
 
 
 '''
@@ -181,7 +192,7 @@ def store_event_list(station_id, password, event_list):
 	if not(eventtype_uploadCode == 'CFG'):
 		# find the eventtype subgroup within the cluster
 		try:
-		    eventGroup = H5file.getNode(clusterSubgroup, eventtype_uploadCode)
+		    eventGroup = H5file.getNode(clusterSubgroup)
 		except NoSuchNodeError, msg:
 		    #the event type is not supported inside the h5 file => we return an error
 		    logger.error("\nInvalid eventtype uploadcode: %s msg: %s" %
@@ -189,8 +200,10 @@ def store_event_list(station_id, password, event_list):
 		    close_flush_and_unlock(H5file, dummyFile)
 		    return RC_PE_INV_EVENTTYPE
 
-		#Now, we call storeEvent on the correct table, with the correct event type
-		result = storeEvent(H5file, eventtype_uploadCode, header, datalist, eventGroup, station_id)
+                # Now, we call store_event on the correct table, with the
+                # correct event type
+                result = store_event(H5file, eventtype_uploadCode, header,
+                                     datalist, eventGroup, station_id)
 		if( result != RC_OK):
 		    # inserting the previous event failed => we break the loop
 		    # if the writing failed, we need to close and unlock the file for other threads
