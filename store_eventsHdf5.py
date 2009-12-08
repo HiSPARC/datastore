@@ -48,10 +48,10 @@ def get_cluster(station_id):
 	#print cluster[0][1]
         result = cluster[0][1]
     except IOError:
-	print "Cannot open file: %s" % (DATAFILE_CLUSTERS)
+	#print "Cannot open file: %s" % (DATAFILE_CLUSTERS)
         result = -1
     except IndexError:
-        print "No station with such id present in file: %s" % (DATAFILE_CLUSTERS)
+        #print "No station with such id present in file: %s" % (DATAFILE_CLUSTERS)
         result = -1
     finally:
         dataFile.close()
@@ -154,7 +154,7 @@ def store_event_list(station_id, password, event_list):
     global nbEvents
     rc = check_station_password(station_id, password)
     if rc:
-	print "WRONG PASSWORD:  THE STATION CANNOT SAVE ITS EVENTS"
+	#print "WRONG PASSWORD:  THE STATION CANNOT SAVE ITS EVENTS"
 	return rc
     #previousDate will be used to check if it is the first event in the list
     previousDate = datetime.date(1900,12,12)
@@ -167,7 +167,7 @@ def store_event_list(station_id, password, event_list):
         datalist = event['datalist']
 
         dateEvent = event['header']['datetime'].date()
-        print dateEvent
+        #print dateEvent
 
         #here we check if the current event's date is different than the previous one
         if dateEvent != previousDate:

@@ -1,6 +1,5 @@
-from mod_python import apache, util
+import urlparse
 from cPickle import dumps, loads, UnpicklingError
-#from store_events import store_event_list, test_db_connection
 from store_eventsHdf5 import store_event_list
 from rcodesHdf5 import *
 from md5_sum import md5_sum
@@ -18,8 +17,8 @@ logger.addHandler(log_fhandler)
 logger.setLevel(logging.INFO)
 
 
-def handler(req):
-    """ The hisparc upload handler.
+def application(environ, start_response):
+    """ The hisparc upload application
 
     This handler is called by apache whenever someone requests
     http://peene.nikhef.nl/hisparc/*.
@@ -34,18 +33,14 @@ def handler(req):
     on to store_event_list.
 
     """
-    qs = req.read()
-    vars = util.parse_qsl(qs)
-    vars = dict(vars)
-    
-    # debug code by egbert:
-    req.content_type = 'text/html'
+    input = environ['wsgi.input'].readline()
+    vars = urlparse.parse_qs(input)
 
     try:
-        data = vars['data']
-        checksum = vars['checksum']
-        station_id = int(vars['station_id'])
-        password = vars['password']
+        data = vars['data'][0]
+        checksum = vars['checksum'][0]
+        station_id = int(vars['station_id'][0])
+        password = vars['password'][0]
     except (KeyError, EOFError):
         returncode = RC_ISE_INV_POSTDATA
     else:
@@ -71,8 +66,11 @@ def handler(req):
         else:
             returncode = RC_PE_INV_AUTHCODE
 
-    req.write(str(returncode))
-    return apache.OK
+    status = '200 OK'
+    response_headers = [('Content-type', 'text/plain')]
+    start_response(status, response_headers)
+
+    return [str(returncode)]
 
 
 """
