@@ -1,8 +1,8 @@
 from os import makedirs, access, F_OK, path
-from fcntl import *
+import fcntl
 import datetime
 from definesHdf5 import *
-from tables import *
+import tables
 from storage_layoutHdf5 import initialize_database
 import logging
 
@@ -19,7 +19,7 @@ def close_flush_and_unlock(h5file, dummyFile):
     h5file.flush()
     h5file.close()
     logger.info("UNLOCKING `%s' " % (dummyFile))
-    flock(dummyFile, LOCK_UN)
+    fcntl.flock(dummyFile, fcntl.LOCK_UN)
     dummyFile.close()
 
 def open_h5_file(date, mode):
@@ -39,8 +39,8 @@ def open_h5_file(date, mode):
     logger.info("TRYING TO OPEN `%s'" % (path+filename))
     dummyFile = open(path+filename, mode)
     logger.info("LOCKING `%s'" % (path+filename))
-    flock(dummyFile, LOCK_EX)
+    fcntl.flock(dummyFile, fcntl.LOCK_EX)
     #Now once the file is locked, we open the h5handler
     logger.info("OPENING `%s'" % (path+filename))
-    h5handler = openFile(path+filename,mode)
+    h5handler = tables.openFile(path+filename,mode)
     return [h5handler, dummyFile]

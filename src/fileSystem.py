@@ -1,4 +1,3 @@
-from fcntl import flock
 import sys
 # This script creates the file system to store hdf5 data files
 # 
@@ -19,7 +18,7 @@ __date__ ="$18-sep-2009"
 import os
 import tables
 import definesHdf5
-from fcntl import *
+import fcntl import
 
 
 
@@ -112,7 +111,7 @@ def openAndLockDummyFile():
     fileDescriptor=open(definesHdf5.DUMMY_FILENAME,"a")
 
     #lock the file
-    flock(fileDescriptor,LOCK_EX)
+    fcntl.flock(fileDescriptor, fcntl.LOCK_EX)
 
     #return the file descriptor
     return fileDescriptor
@@ -124,7 +123,7 @@ Unlocks and closes the dummy file.
 '''
 def unlockAndCloseDummyFile(fileDescriptor):
     #unlock the dummy file
-    flock(fileDescriptor, LOCK_UN)
+    fcntl.flock(fileDescriptor, fcntl.LOCK_UN)
 
     #close the file
     fileDescriptor.close()

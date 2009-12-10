@@ -7,16 +7,18 @@ import rcodesHdf5
 from rcodesHdf5 import *
 
 
-from tables import *
+import tables
 import logging
 from storage_layoutHdf5 import initialize_clusters
 import datetime
 import random
 from os import makedirs, access, F_OK, path
 #import fcntl
-from fcntl import *
-from LockMechanism import *
+import fcntl
+import LockMechanism
 from upload_codes import eventtype_upload_codes
+
+from definesHdf5 import *
 
 ################################
 
@@ -43,7 +45,7 @@ Returns -1 in case of problem
 def get_cluster(station_id):
     sCondition = "station_id == %d" % (station_id)
     try:
-	dataFile = openFile(DATAFILE_CLUSTERS, "r")
+	dataFile = tables.openFile(DATAFILE_CLUSTERS, "r")
 	cluster = dataFile.root.HisparcClusters.readWhere(sCondition)
 	#print cluster[0][1]
         result = cluster[0][1]
@@ -159,6 +161,9 @@ def store_event_list(station_id, password, event_list):
     #previousDate will be used to check if it is the first event in the list
     previousDate = datetime.date(1900,12,12)
 
+    cluster = get_cluster(station_id)
+    clusterName = 'cluster_' + cluster.lower()
+
     for event in event_list:
 	nbEvents += 1
 	#logger.info("TREATING THIS EVENT `%s'" % str(event))
@@ -175,16 +180,14 @@ def store_event_list(station_id, password, event_list):
             if previousDate != datetime.date(1900,12,12):
                 #not the first event of the list, we need to close the previous file
                 #we flush and unlock the file
-                close_flush_and_unlock(H5file, dummyFile)
+                LockMechanism.close_flush_and_unlock(H5file, dummyFile)
             #we need to open the file to store the event in
-            [H5file,dummyFile] = open_h5_file(dateEvent, "a")
+            [H5file,dummyFile] = LockMechanism.open_h5_file(dateEvent, "a")
 
         #at this point, H5file is a handler to the h5 file in which the event needs to be inserted
         #we check to which cluster and type this event belongs
   
         # check all subgroups by eventtype_uploadcode
-        cluster = get_cluster(station_id)
-        clusterName = 'cluster_' + cluster.lower()
         clusterSubgroup = H5file.getNode("/hisparc/", clusterName)
 
         # Now we look at what kind of event this is
@@ -207,11 +210,11 @@ def store_event_list(station_id, password, event_list):
 		if( result != RC_OK):
 		    # inserting the previous event failed => we break the loop
 		    # if the writing failed, we need to close and unlock the file for other threads
-		    close_flush_and_unlock(H5file, dummyFile)
+		    LockMechanism.close_flush_and_unlock(H5file, dummyFile)
 		    return result
 		previousDate = dateEvent
     #closing file if it was not done before
-    close_flush_and_unlock(H5file, dummyFile)
+    LockMechanism.close_flush_and_unlock(H5file, dummyFile)
     #end of the batch, if we arrived, here, it means everything went fine => return RC_OK
     return RC_OK	
 
@@ -244,7 +247,7 @@ def db_station_password(station_id):
             initialize_clusters(DATAFILE_CLUSTERS)
 
     try:
-	dataFile = openFile(DATAFILE_CLUSTERS, "r")
+	dataFile = tables.openFile(DATAFILE_CLUSTERS, "r")
     	clusterTable = dataFile.root.HisparcClusters
 	result = [x['password'] for x in clusterTable.iterrows() if x['station_id']==station_id]
         password = result[0]
