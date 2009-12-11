@@ -11,9 +11,7 @@ import tables
 import logging
 from storage_layoutHdf5 import initialize_clusters
 import datetime
-import random
 from os import makedirs, access, F_OK, path
-#import fcntl
 import fcntl
 import LockMechanism
 from upload_codes import eventtype_upload_codes
@@ -86,8 +84,12 @@ def store_event(datafile, eventtype, eventheader, eventdatalist,
     # epoch
     ext_timestamp = timestamp * long(1e9) + nanoseconds
     row['timestamp'] = timestamp
-    row['nanoseconds'] = nanoseconds
-    row['ext_timestamp'] = ext_timestamp
+
+    if eventtype == 'CIC' or eventtype == 'CMP':
+        # This is a HiSPARC coincidence or comparator message, extended
+        # timing information is available
+        row['nanoseconds'] = nanoseconds
+        row['ext_timestamp'] = ext_timestamp
 
     # get default values for the data
     data = {}
@@ -137,7 +139,7 @@ def data_is_blob(uploadcode, blob_types):
         if uploadcode[:-1] in blob_types:
             return True
     elif uploadcode in blob_types:
-        True
+        return True
     return False
 
 

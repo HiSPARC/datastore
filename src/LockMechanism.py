@@ -19,7 +19,7 @@ def close_flush_and_unlock(h5file, dummyFile):
     h5file.flush()
     h5file.close()
     logger.info("UNLOCKING `%s' " % (dummyFile))
-    fcntl.flock(dummyFile, fcntl.LOCK_UN)
+    fcntl.lockf(dummyFile, fcntl.LOCK_UN)
     dummyFile.close()
 
 def open_h5_file(date, mode):
@@ -39,7 +39,7 @@ def open_h5_file(date, mode):
     logger.info("TRYING TO OPEN `%s'" % (path+filename))
     dummyFile = open(path+filename, mode)
     logger.info("LOCKING `%s'" % (path+filename))
-    fcntl.flock(dummyFile, fcntl.LOCK_EX)
+    fcntl.lockf(dummyFile, fcntl.LOCK_EX)
     #Now once the file is locked, we open the h5handler
     logger.info("OPENING `%s'" % (path+filename))
     h5handler = tables.openFile(path+filename,mode)
