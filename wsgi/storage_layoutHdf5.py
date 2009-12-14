@@ -92,36 +92,3 @@ def initialize_database(datafile):
 
     data.flush()
     data.close()
-
-def open_h5_file(date, mode):
-    path= DATA_ROOT_DIR+"/%s/%s/" % (date.year, date.month)
-    filename="%s_%s_%s.h5" % (date.year, date.month,date.day)
-
-    try:
-            makedirs(path,0777)
-    except:
-            print "directory %s already exists" % path
-    #test if the H5 file actually exists
-    if(not access(path+filename,F_OK)):
-            initialize_database(path+filename)
-            print"file %s/%s was created" % (path,filename)
-
-    #We use a dummy file to lock the actual file
-    dummyFile = open(path+filename, mode)
-    flock(dummyFile, LOCK_EX)
-    #Now once the file is locked, we open the h5handler
-    h5handler = tables.openFile(path+filename,mode)
-    return [h5handler, dummyFile]
-
-
-
-def openDataFile(year, month, day, mode):
-	sPath = "./" + definesHdf5.DATA_ROOT_DIR + "/" + str(year) + "/" + str(month) + "/"+str(year)+"_"+str(month)+"_"+str(day)+".h5"
-	try:
-		dataFile = tables.openFile(sPath, mode)
-		#print dataFile
-	except IOError:
-		print "Cannot open file: %s" % (sPath)
-	else:
-		return dataFile
-

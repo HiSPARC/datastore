@@ -2,36 +2,17 @@ import sys
 import os.path
 import calendar
 import base64
+import tables
+import logging
+import datetime
 
 import rcodesHdf5
 from rcodesHdf5 import *
-
-
-import tables
-import logging
 from storage_layoutHdf5 import initialize_clusters
-import datetime
-from os import makedirs, access, F_OK, path
-import fcntl
-import LockMechanism
 from upload_codes import eventtype_upload_codes
-
 from definesHdf5 import *
 
-################################
-
-# Create a logger and set it up.
-# NOTE: We implicitly configure the root logger here so that all
-#       loggers in the modules will inherit the same settings.
-log_fhandler = logging.FileHandler("/tmp/hisparc_upload")
-formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s:%(message)s")
-log_fhandler.setFormatter(formatter)
-logger = logging.getLogger()
-logger.name = "main"
-logger.addHandler(log_fhandler)
-logger.setLevel(logging.INFO)
-
-################################
+logger = logging.getLogger('store_events')
 
 global nbEvents
 nbEvents = 0
