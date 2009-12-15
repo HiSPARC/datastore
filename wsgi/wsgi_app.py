@@ -11,10 +11,15 @@ import shutil
 
 from rcodes import *
 
+LEVELS = {'debug': logging.DEBUG,
+          'info': logging.INFO,
+          'warning': logging.WARNING,
+          'error': logging.ERROR,
+          'critical': logging.CRITICAL}
+
 logger = logging.getLogger('wsgi_app')
 formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
                               '.%(funcName)s.%(levelname)s: %(message)s')
-logger.setLevel(logging.DEBUG)
 
 
 def application(environ, start_response, configfile):
@@ -66,7 +71,7 @@ def application(environ, start_response, configfile):
                 return [str(RC_ISE_INV_POSTDATA)]
 
     try:
-        station_password = station_list[station_id][1]
+        cluster, station_password = station_list[station_id]
     except KeyError:
         logger.debug("Station %d is unknown" % station_id)
         return [str(RC_PE_INV_STATIONID)]
@@ -76,7 +81,7 @@ def application(environ, start_response, configfile):
                                                             password))
         return [str(RC_PE_INV_AUTHCODE)]
     else:
-        store_data(station_id, event_list)
+        store_data(station_id, cluster, event_list)
         logger.debug("Station %d: succesfully completed" % station_id)
         return [str(RC_OK)]
 
@@ -103,6 +108,8 @@ def do_init(configfile):
                         backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+        level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
+        logger.setLevel(level=level)
 
     # read station list
     global station_list
@@ -117,16 +124,18 @@ def do_init(configfile):
                 num = int(num)
                 station_list[num] = (cluster, password)
 
-def store_data(station_id, data):
+def store_data(station_id, cluster, event_list):
     """Store verified event data to temporary storage"""
 
     logger.debug('Storing data for station %d' % station_id)
 
     dir = os.path.join(config.get('General', 'data_dir'), 'incoming')
-    tmp_dir = os.path.join(dir, 'tmp')
+    tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
-    pickle.dump({'station_id': station_id, 'data': data}, file)
+    data = {'station_id': station_id, 'cluster': cluster,
+            'event_list': event_list}
+    pickle.dump(data, file)
     file.close()
 
     shutil.move(file.name, dir)

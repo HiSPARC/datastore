@@ -1,7 +1,8 @@
 eventtype_upload_codes = {
     'CIC': {
-        'tablename': 'events',
-        'blobs': ['TR'],
+        '_tablename': 'events',
+        '_blobs': ['TR'],
+        '_has_ext_time': True,
         'RED': 'data_reduction',
         'EVENTRATE': 'event_rate',
         'TRIGPATTERN': 'trigger_pattern',
@@ -13,13 +14,15 @@ eventtype_upload_codes = {
         'TR': 'traces',
     },
     'ERR': {
-        'tablename': 'errors',
-        'blobs': ['ERRMSG'],
+        '_tablename': 'errors',
+        '_blobs': ['ERRMSG'],
+        '_has_ext_time': False,
         'ERRMSG': 'messages',
     },
     'CMP': {
-        'tablename': 'comparator',
-        'blobs': [],
+        '_tablename': 'comparator',
+        '_blobs': [],
+        '_has_ext_time': True,
         'CMP_DEVICE': 'device',
         'CMP_COMPARATOR': 'comparator',
         'CMP_COUNT': 'count',
