@@ -103,9 +103,9 @@ def do_init(configfile):
 
     # set up logger
     if not logger.handlers:
-        handler = logging.handlers.TimedRotatingFileHandler(
-                        config.get('General', 'log'), when='midnight',
-                        backupCount=14)
+        file = config.get('General', 'log') + '-wsgi.%d' % os.getpid()
+        handler = logging.handlers.TimedRotatingFileHandler(file,
+                        when='midnight', backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)

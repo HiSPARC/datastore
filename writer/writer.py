@@ -31,9 +31,9 @@ def writer(configfile):
     config.read(configfile)
 
     # set up logger
-    handler = logging.handlers.TimedRotatingFileHandler(
-                    config.get('General', 'log'), when='midnight',
-                    backupCount=14)
+    file = config.get('General', 'log') + '-writer.%d' % os.getpid()
+    handler = logging.handlers.TimedRotatingFileHandler(file,
+                when='midnight', backupCount=14)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
@@ -42,14 +42,17 @@ def writer(configfile):
     queue = os.path.join(config.get('General', 'data_dir'), 'incoming')
 
     # writer process
-    while True:
-        entries = os.listdir(queue)
-        if not entries:
-            time.sleep(config.getint('Writer', 'sleep'))
-        for entry in entries:
-            path = os.path.join(queue, entry)
-            process_data(path)
-            os.remove(path)
+    try:
+        while True:
+            entries = os.listdir(queue)
+            if not entries:
+                time.sleep(config.getint('Writer', 'sleep'))
+            for entry in entries:
+                path = os.path.join(queue, entry)
+                process_data(path)
+                os.remove(path)
+    except:
+        logger.exception('Exception occured, quitting.')
 
 def process_data(file):
     with open(file) as handle:

@@ -9,8 +9,7 @@ import datetime
 import storage
 from upload_codes import eventtype_upload_codes
 
-# FIXME: this doesn't seem to work...
-logger = logging.getLogger('store_events')
+logger = logging.getLogger('writer.store_events')
 
 def store_event(datafile, parentnode, station_id, event):
     """Stores an event in the h5 filesystem
@@ -25,7 +24,13 @@ def store_event(datafile, parentnode, station_id, event):
     eventdatalist = event['datalist']
     eventtype = eventheader['eventtype_uploadcode']
 
-    upload_codes = eventtype_upload_codes[eventtype]
+    try:
+        upload_codes = eventtype_upload_codes[eventtype]
+    except KeyError:
+        logger.error('Unknown event type: %s, discarding event' %
+                     eventtype)
+        return
+
     table = storage.get_or_create_node(datafile, parentnode,
                                        upload_codes['_tablename'])
     blobs = storage.get_or_create_node(datafile, parentnode, 'blobs')
