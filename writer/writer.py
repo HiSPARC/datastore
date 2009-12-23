@@ -10,6 +10,7 @@ import ConfigParser
 import os
 import time
 import cPickle as pickle
+import shutil
 
 from store_events import store_event_list
 
@@ -40,15 +41,22 @@ def writer(configfile):
     logger.setLevel(level=level)
 
     queue = os.path.join(config.get('General', 'data_dir'), 'incoming')
+    partial_queue = os.path.join(config.get('General', 'data_dir'),
+                                 'partial')
 
     # writer process
     try:
         while True:
             entries = os.listdir(queue)
+
             if not entries:
                 time.sleep(config.getint('Writer', 'sleep'))
+
             for entry in entries:
                 path = os.path.join(queue, entry)
+                shutil.move(path, partial_queue)
+
+                path = os.path.join(partial_queue, entry)
                 process_data(path)
                 os.remove(path)
     except:

@@ -78,10 +78,18 @@ def store_event(datafile, parentnode, station_id, event):
         if uploadcode[-1].isdigit():
             # uploadcode: PH1, IN3, etc.
             key, index = uploadcode[:-1], int(uploadcode[-1]) - 1
-            data[key][index] = value
+            if key in data:
+                data[key][index] = value
+            else:
+                logger.warning('Datatype not known on server side: %s '
+                               '(%s)' % (key, eventtype))
         else:
             # uploadcode: EVENTRATE, RED, etc.
-            data[uploadcode] = value
+            if uploadcode in data:
+                data[uploadcode] = value
+            else:
+                logger.warning('Datatype not known on server side: %s '
+                               '(%s)' % (uploadcode, eventtype))
 
     # write data values to row
     for key, value in upload_codes.items():
@@ -90,8 +98,8 @@ def store_event(datafile, parentnode, station_id, event):
             row[value] = data[key]
 
     row.append()
-    #table.flush()
-    #blobs.flush()
+    table.flush()
+    blobs.flush()
 
 def data_is_blob(uploadcode, blob_types):
     """Determine if data is a variable length binary value (blob)"""
