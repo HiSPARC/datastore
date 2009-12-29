@@ -12,7 +12,6 @@ class HisparcClusters(tables.IsDescription):
 class HisparcEvent(tables.IsDescription):
     # DISCUSS: use of signed (dflt -1) vs unsigned (labview code)
     event_id = tables.UInt32Col(pos=0)
-    station_id = tables.UInt16Col(pos=1)
     timestamp = tables.Time32Col(pos=2)
     nanoseconds = tables.UInt32Col(pos=3)
     ext_timestamp = tables.UInt64Col(pos=4)
@@ -28,13 +27,11 @@ class HisparcEvent(tables.IsDescription):
        
 class HisparcError(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
-    station_id = tables.UInt16Col(pos=1)
     timestamp = tables.Time32Col(pos=2)
     messages = tables.Int32Col(pos=3)
 
 class HisparcComparatorData(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
-    station_id = tables.UInt16Col(pos=1)
     timestamp = tables.Time32Col(pos=2)
     nanoseconds = tables.UInt32Col(pos=3)
     ext_timestamp = tables.UInt64Col(pos=4)
@@ -44,7 +41,6 @@ class HisparcComparatorData(tables.IsDescription):
 
 class HisparcConfiguration(tables.IsDescription):
     event_id = tables.UInt32Col()
-    station_id = tables.UInt16Col()
     timestamp = tables.Time32Col()
     gps_latitude = tables.Float64Col()
     gps_longitude = tables.Float64Col()
@@ -155,8 +151,27 @@ def open_or_create_file(data_dir, date):
 
     return tables.openFile(file, 'a')
 
-def get_or_create_cluster_node(file, cluster):
-    """Get an existing cluster node or create a new one
+def get_or_create_station_group(file, cluster, station_id):
+    """Get an existing station group or create a new one
+
+    :param file: the PyTables data file
+    :param cluster: the name of the cluster
+    :param station_id: the station number
+
+    """
+    cluster = get_or_create_cluster_group(file, cluster)
+    node_name = 'station_%d' % station_id
+    try:
+        station = file.getNode(cluster, node_name)
+    except tables.NoSuchNodeError:
+        station = file.createGroup(cluster, node_name,
+                                   'HiSPARC station %d data' % station_id)
+        file.flush()
+
+    return station
+
+def get_or_create_cluster_group(file, cluster):
+    """Get an existing cluster group or create a new one
 
     :param file: the PyTables data file
     :param cluster: the name of the cluster

@@ -11,11 +11,11 @@ from upload_codes import eventtype_upload_codes
 
 logger = logging.getLogger('writer.store_events')
 
-def store_event(datafile, parentnode, station_id, event):
+def store_event(datafile, cluster, station_id, event):
     """Stores an event in the h5 filesystem
 
     :param datafile: the h5 data file
-    :param parentnode: the h5 data node which contains the event tables
+    :param cluster: the name of the cluster to which the station belongs
     :param station_id: the id of the station this event belongs to
     :param event: the event to store
 
@@ -31,13 +31,14 @@ def store_event(datafile, parentnode, station_id, event):
                      eventtype)
         return
 
+    parentnode = storage.get_or_create_station_group(datafile, cluster,
+                                                     station_id)
     table = storage.get_or_create_node(datafile, parentnode,
                                        upload_codes['_tablename'])
     blobs = storage.get_or_create_node(datafile, parentnode, 'blobs')
 
     row = table.row
     row['event_id'] = table.nrows + 1
-    row['station_id'] = station_id
     # make a unix-like timestamp
     timestamp = calendar.timegm(eventheader['datetime'].utctimetuple())
     nanoseconds = eventheader['nanoseconds']
@@ -124,8 +125,6 @@ def store_event_list(data_dir, station_id, cluster, event_list):
             datafile = storage.open_or_create_file(data_dir, date)
             prev_date = date
 
-        clusternode = storage.get_or_create_cluster_node(datafile,
-                                                         cluster)
-        store_event(datafile, clusternode, station_id, event)
+        store_event(datafile, cluster, station_id, event)
 
     datafile.close()
