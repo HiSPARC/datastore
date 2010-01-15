@@ -120,9 +120,10 @@ def do_init(configfile):
         with open(config.get('General', 'station_list')) as file:
             reader = csv.reader(file)
             for station in reader:
-                num, cluster, password = station
-                num = int(num)
-                station_list[num] = (cluster, password)
+                if station:
+                    num, cluster, password = station
+                    num = int(num)
+                    station_list[num] = (cluster, password)
 
 def store_data(station_id, cluster, event_list):
     """Store verified event data to temporary storage"""
