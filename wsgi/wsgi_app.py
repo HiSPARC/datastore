@@ -133,6 +133,10 @@ def store_data(station_id, cluster, event_list):
     dir = os.path.join(config.get('General', 'data_dir'), 'incoming')
     tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
+    if is_data_suspicious(event_list):
+        dir = os.path.join(config.get('General', 'data_dir'),
+                           'suspicious')
+
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
     data = {'station_id': station_id, 'cluster': cluster,
             'event_list': event_list}
@@ -140,3 +144,16 @@ def store_data(station_id, cluster, event_list):
     file.close()
 
     shutil.move(file.name, dir)
+
+def is_data_suspicious(event_list):
+    """Check data for suspiciousness
+    
+    Suspiciousness, a previously unknown quantum number that may signify
+    the actual birth of the universe and the reweaving of past fates into
+    current events has come to hunt us and our beloved data.
+
+    """
+    for event in event_list:
+        if event['header']['datetime'].year == 2008:
+            return True
+    return False
