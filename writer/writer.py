@@ -32,7 +32,7 @@ def writer(configfile):
     config.read(configfile)
 
     # set up logger
-    file = config.get('General', 'log') + '-writer.%d' % os.getpid()
+    file = config.get('General', 'log') + '-writer'
     handler = logging.handlers.TimedRotatingFileHandler(file,
                 when='midnight', backupCount=14)
     handler.setFormatter(formatter)
