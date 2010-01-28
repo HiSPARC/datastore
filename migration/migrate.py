@@ -22,6 +22,7 @@ import csv
 BATCHSIZE = 1000
 DATASTORE_PATH = '/tmp/datastore'
 STATION_LIST = '/tmp/station_list.csv'
+STATUS = '/tmp/migration-status'
 
 class Database:
     def __init__(self):
@@ -42,13 +43,31 @@ class Database:
 def migrate():
     """Migrate data from eventwarehouse to datastore"""
 
+    status = read_migration_status()
     cluster = read_station_list()
     eventwarehouse = Database()
 
     logger.info("Starting migration of all data...")
     for station in get_stations(eventwarehouse):
-        migrate_data(eventwarehouse, station, cluster[station])
+        migrate_data(eventwarehouse, status, station, cluster[station])
     logger.info("Migrating all data finished succesfully.")
+
+def read_migration_status():
+    """Read migration status from file"""
+
+    try:
+        with open(STATUS, 'r') as file:
+            status = pickle.load(file)
+    except IOError:
+        status = {}
+
+    return status
+
+def write_migration_status(status):
+    """Write migration status to file"""
+
+    with open(STATUS, 'w') as file:
+        pickle.dump(status, file)
 
 def read_station_list():
     """Read station, cluster combinations from file"""
@@ -70,28 +89,37 @@ def get_stations(eventwarehouse):
     results = execute_and_results(eventwarehouse, sql)
     return [x[0] for x in results]
 
-def migrate_data(eventwarehouse, station, cluster):
+def migrate_data(eventwarehouse, status, station, cluster):
     """Migrate data for a station"""
 
     logger.info("Starting migration for station %d" % station)
-    for start, end, batch in get_event_batches(eventwarehouse, station):
+    for start, end, batch in get_event_batches(eventwarehouse, status,
+                                               station):
         logger.info("Migrating batch from %s to %s" % (start, end))
         store_events(batch, station, cluster)
+        write_migration_status(status)
         logger.info("Done.")
 
-def get_event_batches(eventwarehouse, station):
+def get_event_batches(eventwarehouse, status, station):
     """Generator function yielding batches of events for a station"""
 
     offset = 0
     limit = BATCHSIZE
     while True:
+        if status.has_key(station):
+            if offset <= status[station]:
+                offset += limit
+                continue
+
         events = get_events(eventwarehouse, station, offset, limit)
         if not events:
             raise StopIteration
         else:
             get_event_data(eventwarehouse, events)
             get_calculated_data(eventwarehouse, events)
+            status[station] = offset
             offset += limit
+
             events = events.values()
             dts = [x['header']['datetime'] for x in events]
             yield min(dts), max(dts), events
