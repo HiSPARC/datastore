@@ -87,7 +87,13 @@ def get_stations(eventwarehouse):
 
     sql = "SELECT station_id FROM event GROUP BY station_id"
     results = execute_and_results(eventwarehouse, sql)
-    return [x[0] for x in results]
+    station_list = [x[0] for x in results]
+
+    # Place station 99 at end of queue
+    station_list.remove(99)
+    station_list.append(99)
+
+    return station_list
 
 def migrate_data(eventwarehouse, status, station, cluster):
     """Migrate data for a station"""
