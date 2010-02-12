@@ -89,9 +89,8 @@ def get_stations(eventwarehouse):
     results = execute_and_results(eventwarehouse, sql)
     station_list = [x[0] for x in results]
 
-    # Place station 99 at end of queue
-    station_list.remove(99)
-    station_list.append(99)
+    #FIXME renumbered stations... have to fix this in eventwarehouse
+    station_list.remove(4)
 
     return station_list
 
@@ -109,35 +108,48 @@ def migrate_data(eventwarehouse, status, station, cluster):
 def get_event_batches(eventwarehouse, status, station):
     """Generator function yielding batches of events for a station"""
 
-    offset = 0
-    limit = BATCHSIZE
-    while True:
-        if status.has_key(station):
-            if offset <= status[station]:
-                offset += limit
-                continue
+    if not status.has_key(station):
+        status[station] = '1970-1-1', None
 
-        events = get_events(eventwarehouse, station, offset, limit)
-        if not events:
-            raise StopIteration
+    for date in get_station_date_list(eventwarehouse, status, station):
+        if date == status[station][0]:
+            offset = status[station][1] + BATCHSIZE
         else:
-            get_event_data(eventwarehouse, events)
-            get_calculated_data(eventwarehouse, events)
-            status[station] = offset
-            offset += limit
+            offset = 0
 
-            events = events.values()
-            dts = [x['header']['datetime'] for x in events]
-            yield min(dts), max(dts), events
+        while True:
+            events = get_events(eventwarehouse, station, date, offset,
+                                BATCHSIZE)
+            if not events:
+                break
+            else:
+                get_event_data(eventwarehouse, events)
+                get_calculated_data(eventwarehouse, events)
+                status[station] = date, offset
+                offset += BATCHSIZE
 
-def get_events(eventwarehouse, station, offset, limit):
+                events = events.values()
+                dts = [x['header']['datetime'] for x in events]
+                yield min(dts), max(dts), events
+
+def get_station_date_list(eventwarehouse, status, station):
+    """Get date list for a station"""
+
+    start = status[station][0]
+    sql = ("SELECT date FROM event WHERE station_id=%s AND "
+           "eventtype_id=1 AND date >= %s AND date < '2009-12-1' GROUP "
+           "BY date")
+    results = execute_and_results(eventwarehouse, sql, (station, start))
+    return [x[0] for x in results]
+
+def get_events(eventwarehouse, station, date, offset, limit):
     """Get data from event table"""
 
     sql = ("SELECT event_id, date, time, nanoseconds FROM event WHERE "
-           "station_id=%s AND eventtype_id=1 AND date < '2009-12-1' "
+           "station_id=%s AND eventtype_id=1 AND date=%s "
            "LIMIT %s OFFSET %s")
-    results = execute_and_results(eventwarehouse, sql, (station, limit,
-                                                        offset))
+    results = execute_and_results(eventwarehouse, sql, (station, date,
+                                                        limit, offset))
 
     events = {}
     for event_id, date, time, nanoseconds in results:
@@ -151,11 +163,12 @@ def get_events(eventwarehouse, station, offset, limit):
 def get_event_data(eventwarehouse, events):
     """Get data from eventdata table and add it to events dictionary"""
 
+    event_ids = ','.join([str(x) for x in events])
     sql = ("SELECT event_id, uploadcode, valuefield, integervalue, "
            "doublevalue, textvalue, blobvalue FROM eventdata JOIN "
            "eventdatatype USING(eventdatatype_id) JOIN valuetype "
-           "USING(valuetype_id) WHERE event_id IN %s")
-    results = execute_and_results(eventwarehouse, sql, (events.keys(),))
+           "USING(valuetype_id) WHERE event_id IN (%s)" % event_ids)
+    results = execute_and_results(eventwarehouse, sql)
 
     for (event_id, uploadcode, valuefield, integervalue, doublevalue,
         textvalue, blobvalue) in results:
@@ -168,11 +181,12 @@ def get_event_data(eventwarehouse, events):
 def get_calculated_data(eventwarehouse, events):
     """Get data from calculateddata table and add it to events dictionary"""
 
+    event_ids = ','.join([str(x) for x in events])
     sql = ("SELECT event_id, uploadcode, valuefield, integervalue, "
            "doublevalue FROM calculateddata JOIN calculateddatatype "
            "USING(calculateddatatype_id) JOIN valuetype "
-           "USING(valuetype_id) WHERE event_id IN %s")
-    results = execute_and_results(eventwarehouse, sql, (events.keys(),))
+           "USING(valuetype_id) WHERE event_id IN (%s)" % event_ids)
+    results = execute_and_results(eventwarehouse, sql)
 
     for event_id, uploadcode, valuefield, integervalue, doublevalue in \
         results:
