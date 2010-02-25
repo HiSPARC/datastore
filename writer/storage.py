@@ -130,6 +130,24 @@ class HisparcConfiguration(tables.IsDescription):
     slv_ch2_comp_gain = tables.Float64Col()
     slv_ch2_comp_offset = tables.Float64Col()
 
+class HisparcWeather(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    temp_inside = tables.Float32Col(pos=2)
+    temp_outside = tables.Float32Col(pos=3)
+    humidity_inside = tables.Int16Col(pos=4)
+    humidity_outside = tables.Int16Col(pos=5)
+    barometer = tables.Float32Col(pos=6)
+    wind_dir = tables.Int16Col(pos=7)
+    wind_speed = tables.Int16Col(pos=8)
+    solar_rad = tables.Int16Col(pos=9)
+    uv = tables.Int16Col(pos=10)
+    evapotranspiration = tables.Float32Col(pos=11)
+    rain_rate = tables.Float32Col(pos=12)
+    heat_index = tables.Int16Col(pos=13)
+    dew_point = tables.Float32Col(pos=14)
+    wind_chill = tables.Float32Col(pos=15)
+
 
 def open_or_create_file(data_dir, date):
     """Open an existing file or create a new one
@@ -222,6 +240,10 @@ def get_or_create_node(file, cluster, node):
             node = file.createTable(cluster, 'config',
                                     HisparcConfiguration,
                                     'HiSPARC configuration messages')
+        elif node == 'weather':
+            node = file.createTable(cluster, 'weather',
+                                    HisparcWeather,
+                                    'HiSPARC weather data')
         file.flush()
 
     return node
