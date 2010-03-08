@@ -127,4 +127,5 @@ def store_event_list(data_dir, station_id, cluster, event_list):
 
         store_event(datafile, cluster, station_id, event)
 
-    datafile.close()
+    if datafile:
+        datafile.close()
