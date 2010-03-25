@@ -1,21 +1,22 @@
 DATASTORE_PATH = '/databases/frome'
 STATION_LIST = '/databases/frome/station_list.csv'
-
 OLDDB_STATUS = '/databases/frome/migration-olddb-status'
+EWH_STATUS = '/databases/frome/migration-status'
+BATCHSIZE = 1000
+
 OLDDB_HOST = 'oust'
 OLDDB_USER = 'webread'
 OLDDB_DB = 'hisparc'
-OLDDB_PORT = 3307
+OLDDB_PORT = 3306
 
-BATCHSIZE = 1000
-EWH_STATUS = '/databases/frome/migration-status'
 EWH_HOST = 'peene'
 EWH_USER = 'analysis'
 EWH_PASSWD = 'Data4analysis!'
 EWH_DB = 'eventwarehouse'
-EWH_PORT = 3307
+EWH_PORT = 3306
 
-renumbered_stations = {    4:  101,
+renumbered_stations = {    1:  501,
+                           4:  101,
                            8:  301,
                           11:  302,
                           12:  303,
@@ -24,6 +25,7 @@ renumbered_stations = {    4:  101,
                           16:  201,
                           17:  401,
                           18:  402,
+                          19:  501,
                           20:  202,
                           23:  601,
                           24:  102,
@@ -31,6 +33,11 @@ renumbered_stations = {    4:  101,
                         3004: 3301,
                         3005: 3302,
                         3006: 3303,
+
+                        7010: 7101,
+                        7020: 7201,
+                        7030: 7301,
+                        7300: 7301,
  
                         8002: 8101,
                         8003: 8201,

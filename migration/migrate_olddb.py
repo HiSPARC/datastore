@@ -17,6 +17,7 @@ import os
 import shutil
 import cPickle as pickle
 import zlib
+import base64
 import csv
 import re
 
@@ -41,18 +42,18 @@ def migrate():
     """Migrate data from original database to datastore"""
 
     status = read_migration_status()
-    cluster = read_station_list()
+    clusters = read_station_list()
     olddb = Database()
 
     logger.info("Starting migration of all data...")
     for table in get_data_tables(olddb):
         station = int(re.search('events([0-9]+)', table).group(1))
 
-        # station-specific transformations
-        if station in renumbered_stations:
-            station = renumbered_stations[station]
+        # strange table, don't migrate
+        if station == 0:
+            continue
 
-        migrate_data(olddb, status, table, station, cluster[station])
+        migrate_data(olddb, status, table, station, clusters)
     logger.info("Migrating all data finished succesfully.")
 
 def read_migration_status():
@@ -93,7 +94,7 @@ def read_station_list():
                 station_list[num] = cluster
     return station_list
 
-def migrate_data(database, status, table, station, cluster):
+def migrate_data(database, status, table, station, clusters):
     """Migrate one data table"""
 
     if status.has_key(table):
@@ -102,8 +103,8 @@ def migrate_data(database, status, table, station, cluster):
         logger.info("Migrating table %s" % table)
         status[table] = True
         events = get_events(database, table)
-        events = process_events(events)
-        store_events(events, station, cluster)
+        events = process_events(events, station)
+        store_events(events, station, clusters)
         write_migration_status(status)
         logger.info("Done.")
 
@@ -118,7 +119,7 @@ def get_events(database, table):
 
     return results
 
-def process_events(raw_events):
+def process_events(raw_events, station):
     """Build an event structure from supplied events"""
 
     events = []
@@ -127,16 +128,30 @@ def process_events(raw_events):
          trigns) = event
 
         datalist = {}
-        add_data(datalist, 'TR1', tr1)
-        add_data(datalist, 'TR2', tr2)
-        add_data(datalist, 'PH1', ph1)
-        add_data(datalist, 'PH2', ph2)
-        add_data(datalist, 'IN1', in1)
-        add_data(datalist, 'IN2', in2)
-        add_data(datalist, 'BL1', bl1)
-        add_data(datalist, 'BL2', bl2)
-        add_data(datalist, 'NP1', np1)
-        add_data(datalist, 'NP2', np2)
+
+        if station != 19:
+            add_data(datalist, 'TR1', tr1)
+            add_data(datalist, 'TR2', tr2)
+            add_data(datalist, 'PH1', ph1)
+            add_data(datalist, 'PH2', ph2)
+            add_data(datalist, 'IN1', in1)
+            add_data(datalist, 'IN2', in2)
+            add_data(datalist, 'BL1', bl1)
+            add_data(datalist, 'BL2', bl2)
+            add_data(datalist, 'NP1', np1)
+            add_data(datalist, 'NP2', np2)
+        else:
+            # station 19 becomes scint 3 + 4 of station 501
+            add_data(datalist, 'TR3', tr1)
+            add_data(datalist, 'TR4', tr2)
+            add_data(datalist, 'PH3', ph1)
+            add_data(datalist, 'PH4', ph2)
+            add_data(datalist, 'IN3', in1)
+            add_data(datalist, 'IN4', in2)
+            add_data(datalist, 'BL3', bl1)
+            add_data(datalist, 'BL4', bl2)
+            add_data(datalist, 'NP3', np1)
+            add_data(datalist, 'NP4', np2)
 
         datalist = [{'data_uploadcode': x[0], 'data': x[1]} for x in
                     datalist.items()]
@@ -153,11 +168,15 @@ def add_data(datalist, key, value):
 
     if value:
         if key[:-1] == 'TR':
-            value = zlib.compress(value)
+            value = base64.encodestring(zlib.compress(value))
         datalist[key] = value
 
-def store_events(event_list, station, cluster):
+def store_events(event_list, station, clusters):
     """Store an event batch in the datastore incoming directory"""
+
+    if station in renumbered_stations:
+        station = renumbered_stations[station]
+    cluster = clusters[station]
 
     dir = os.path.join(DATASTORE_PATH, 'incoming')
     tmp_dir = os.path.join(DATASTORE_PATH, 'tmp')
