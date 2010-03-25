@@ -19,19 +19,16 @@ import cPickle as pickle
 import base64
 import csv
 
-BATCHSIZE = 1000
-DATASTORE_PATH = '/tmp/datastore'
-STATION_LIST = '/tmp/station_list.csv'
-STATUS = '/tmp/migration-status'
+from settings import *
 
 class Database:
     def __init__(self):
         self.open()
 
     def open(self):
-        self.db = MySQLdb.connect(host='127.0.0.1', user='analysis',
-                                  passwd='Data4analysis!',
-                                  db='eventwarehouse', port=3307)
+        self.db = MySQLdb.connect(host=EWH_HOST, user=EWH_USER,
+                                  passwd=EWH_PASSWD, db=EWH_DB,
+                                  port=EWH_PORT)
 
     def close(self):
         self.db.close()
@@ -44,19 +41,19 @@ def migrate():
     """Migrate data from eventwarehouse to datastore"""
 
     status = read_migration_status()
-    cluster = read_station_list()
+    clusters = read_station_list()
     eventwarehouse = Database()
 
     logger.info("Starting migration of all data...")
     for station in get_stations(eventwarehouse):
-        migrate_data(eventwarehouse, status, station, cluster[station])
+        migrate_data(eventwarehouse, status, station, clusters)
     logger.info("Migrating all data finished succesfully.")
 
 def read_migration_status():
     """Read migration status from file"""
 
     try:
-        with open(STATUS, 'r') as file:
+        with open(EWH_STATUS, 'r') as file:
             status = pickle.load(file)
     except IOError:
         status = {}
@@ -66,7 +63,7 @@ def read_migration_status():
 def write_migration_status(status):
     """Write migration status to file"""
 
-    with open(STATUS, 'w') as file:
+    with open(EWH_STATUS, 'w') as file:
         pickle.dump(status, file)
 
 def read_station_list():
@@ -89,19 +86,16 @@ def get_stations(eventwarehouse):
     results = execute_and_results(eventwarehouse, sql)
     station_list = [x[0] for x in results]
 
-    #FIXME renumbered stations... have to fix this in eventwarehouse
-    station_list.remove(4)
-
     return station_list
 
-def migrate_data(eventwarehouse, status, station, cluster):
+def migrate_data(eventwarehouse, status, station, clusters):
     """Migrate data for a station"""
 
     logger.info("Starting migration for station %d" % station)
     for start, end, batch in get_event_batches(eventwarehouse, status,
                                                station):
         logger.info("Migrating batch from %s to %s" % (start, end))
-        store_events(batch, station, cluster)
+        store_events(batch, station, clusters)
         write_migration_status(status)
         logger.info("Done.")
 
@@ -194,8 +188,12 @@ def get_calculated_data(eventwarehouse, events):
         events[event_id]['datalist'].append(
             {'data_uploadcode': uploadcode, 'data': value})
 
-def store_events(event_list, station, cluster):
+def store_events(event_list, station, clusters):
     """Store an event batch in the datastore incoming directory"""
+
+    if station in renumbered_stations:
+        station = renumbered_stations[station]
+    cluster = clusters[station]
 
     dir = os.path.join(DATASTORE_PATH, 'incoming')
     tmp_dir = os.path.join(DATASTORE_PATH, 'tmp')

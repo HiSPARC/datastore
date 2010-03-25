@@ -16,24 +16,19 @@ import tempfile
 import os
 import shutil
 import cPickle as pickle
-import base64
+import zlib
 import csv
 import re
 
-from IPython.Shell import IPShellEmbed
-ipshell = IPShellEmbed()
-
-DATASTORE_PATH = '/tmp/datastore'
-STATION_LIST = '/tmp/station_list.csv'
-STATUS = '/tmp/migration-olddb-status'
+from settings import *
 
 class Database:
     def __init__(self):
         self.open()
 
     def open(self):
-        self.db = MySQLdb.connect(host='127.0.0.1', user='webread',
-                                  db='hisparc', port=3308)
+        self.db = MySQLdb.connect(host=OLDDB_HOST, user=OLDDB_USER,
+                                  db=OLDDB_DB, port=OLDDB_PORT)
 
     def close(self):
         self.db.close()
@@ -51,12 +46,11 @@ def migrate():
 
     logger.info("Starting migration of all data...")
     for table in get_data_tables(olddb):
-        station = int(re.search('events(?P<station>[0-9]+)',
-                            table).group('station'))
+        station = int(re.search('events([0-9]+)', table).group(1))
 
         # station-specific transformations
-        if station == 0:
-            continue
+        if station in renumbered_stations:
+            station = renumbered_stations[station]
 
         migrate_data(olddb, status, table, station, cluster[station])
     logger.info("Migrating all data finished succesfully.")
@@ -65,7 +59,7 @@ def read_migration_status():
     """Read migration status from file"""
 
     try:
-        with open(STATUS, 'r') as file:
+        with open(OLDDB_STATUS, 'r') as file:
             status = pickle.load(file)
     except IOError:
         status = {}
@@ -75,7 +69,7 @@ def read_migration_status():
 def write_migration_status(status):
     """Write migration status to file"""
 
-    with open(STATUS, 'w') as file:
+    with open(OLDDB_STATUS, 'w') as file:
         pickle.dump(status, file)
 
 def get_data_tables(database):
@@ -116,12 +110,10 @@ def migrate_data(database, status, table, station, cluster):
 def get_events(database, table):
     """Get data from event table"""
 
-    sql = ("SELECT trace1, trace2, trace3, trace4, rawPulseHeight1, "
-           "rawPulseHeight2, rawPulseHeight3, rawPulseHeight4, "
-           "rawIntegral1, rawIntegral2, rawIntegral3, rawIntegral4, "
-           "rawBaseline1, rawBaseline2, rawBaseline3, rawBaseline4, "
-           "rawNumPeaks1, rawNumPeaks2, rawNumPeaks3, rawNumPeaks4, "
-           "trigDateTime, trigNanoSec FROM %s" % table)
+    sql = ("SELECT trace1, trace2, rawPulseHeight1, rawPulseHeight2, "
+           "rawIntegral1, rawIntegral2, rawBaseline1, rawBaseline2, "
+           "rawNumPeaks1, rawNumPeaks2, trigDateTime, trigNanoSec FROM %s"
+           % table)
     results = execute_and_results(database, sql)
 
     return results
@@ -131,30 +123,20 @@ def process_events(raw_events):
 
     events = []
     for event in raw_events:
-        (tr1, tr2, tr3, tr4, ph1, ph2, ph3, ph4, in1, in2, in3, in4, bl1,
-         bl2, bl3, bl4, np1, np2, np3, np4, trigdt, trigns) = event
+        (tr1, tr2, ph1, ph2, in1, in2, bl1, bl2, np1, np2, trigdt,
+         trigns) = event
 
         datalist = {}
         add_data(datalist, 'TR1', tr1)
         add_data(datalist, 'TR2', tr2)
-        add_data(datalist, 'TR3', tr3)
-        add_data(datalist, 'TR4', tr4)
         add_data(datalist, 'PH1', ph1)
         add_data(datalist, 'PH2', ph2)
-        add_data(datalist, 'PH3', ph3)
-        add_data(datalist, 'PH4', ph4)
         add_data(datalist, 'IN1', in1)
         add_data(datalist, 'IN2', in2)
-        add_data(datalist, 'IN3', in3)
-        add_data(datalist, 'IN4', in4)
         add_data(datalist, 'BL1', bl1)
         add_data(datalist, 'BL2', bl2)
-        add_data(datalist, 'BL3', bl3)
-        add_data(datalist, 'BL4', bl4)
         add_data(datalist, 'NP1', np1)
         add_data(datalist, 'NP2', np2)
-        add_data(datalist, 'NP3', np3)
-        add_data(datalist, 'NP4', np4)
 
         datalist = [{'data_uploadcode': x[0], 'data': x[1]} for x in
                     datalist.items()]
@@ -171,7 +153,7 @@ def add_data(datalist, key, value):
 
     if value:
         if key[:-1] == 'TR':
-            value = base64.encodestring(value)
+            value = zlib.compress(value)
         datalist[key] = value
 
 def store_events(event_list, station, cluster):
