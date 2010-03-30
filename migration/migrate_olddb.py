@@ -49,8 +49,8 @@ def migrate():
     for table in get_data_tables(olddb):
         station = int(re.search('events([0-9]+)', table).group(1))
 
-        # strange table, don't migrate
-        if station == 0:
+        # strange tables, don't migrate
+        if station == 0 or station == 30:
             continue
 
         migrate_data(olddb, status, table, station, clusters)
