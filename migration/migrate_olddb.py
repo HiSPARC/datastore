@@ -50,7 +50,10 @@ def migrate():
         station = int(re.search('events([0-9]+)', table).group(1))
 
         # strange tables, don't migrate
-        if station == 0 or station == 30:
+        if station == 0 or station == 30 or station == 97:
+            continue
+        # removed stations (5001 = Sudan)
+        if station == 5001:
             continue
 
         migrate_data(olddb, status, table, station, clusters)

@@ -193,6 +193,11 @@ def store_events(event_list, station, clusters):
 
     if station in renumbered_stations:
         station = renumbered_stations[station]
+
+    # Do not migrate KASCADE data
+    if station == 99999:
+        return
+
     cluster = clusters[station]
 
     dir = os.path.join(DATASTORE_PATH, 'incoming')
