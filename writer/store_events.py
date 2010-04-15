@@ -118,14 +118,17 @@ def store_event_list(data_dir, station_id, cluster, event_list):
     prev_date = None
     datafile = None
     for event in event_list:
-        date = event['header']['datetime'].date()
-        if date != prev_date:
-            if datafile:
-                datafile.close()
-            datafile = storage.open_or_create_file(data_dir, date)
-            prev_date = date
-
-        store_event(datafile, cluster, station_id, event)
+        timestamp = event['header']['datetime']
+        if timestamp: 
+            date = timestamp.date()
+            if date != prev_date:
+                if datafile:
+                    datafile.close()
+                datafile = storage.open_or_create_file(data_dir, date)
+                prev_date = date
+            store_event(datafile, cluster, station_id, event)
+        else:
+            logger.error("Strange event (no timestamp!), discarding.")
 
     if datafile:
         datafile.close()
