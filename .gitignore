@@ -1,0 +1,18 @@
+# Specific
+station_list.csv
+*.h5
+
+# Python
+*.pyc
+*.pyo
+
+# Eclipse
+.pydevproject
+.metadata
+.project
+
+# OS generated files
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
