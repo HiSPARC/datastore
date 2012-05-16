@@ -10,6 +10,7 @@ station_list.csv
 .pydevproject
 .metadata
 .project
+.settings
 
 # OS generated files
 .DS_Store*
