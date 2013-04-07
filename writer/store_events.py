@@ -62,6 +62,9 @@ def store_event(datafile, cluster, station_id, event):
 
     # process event data
     for item in eventdatalist:
+
+        # FIXME: add try/except for unraveling items (can crash writer)
+
         # uploadcode: EVENTRATE, PH1, IN3, etc.
         uploadcode = item['data_uploadcode']
         # value: actual data value
@@ -118,8 +121,11 @@ def store_event_list(data_dir, station_id, cluster, event_list):
     prev_date = None
     datafile = None
     for event in event_list:
+
+        # FIXME: add try/except for storing events (can crash writer)
+
         timestamp = event['header']['datetime']
-        if timestamp: 
+        if timestamp:
             date = timestamp.date()
             if date != prev_date:
                 if datafile:
