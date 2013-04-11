@@ -11,6 +11,7 @@ from upload_codes import eventtype_upload_codes
 
 logger = logging.getLogger('writer.store_events')
 
+
 def store_event(datafile, cluster, station_id, event):
     """Stores an event in the h5 filesystem
 
@@ -27,8 +28,8 @@ def store_event(datafile, cluster, station_id, event):
     try:
         upload_codes = eventtype_upload_codes[eventtype]
     except KeyError:
-        logger.error('Unknown event type: %s, discarding event' %
-                     eventtype)
+        logger.error("Unknown event type: %s, discarding event (station: %s)"
+                     % (eventtype, station_id))
         return
 
     parentnode = storage.get_or_create_station_group(datafile, cluster,
@@ -62,9 +63,6 @@ def store_event(datafile, cluster, station_id, event):
 
     # process event data
     for item in eventdatalist:
-
-        # FIXME: add try/except for unraveling items (can crash writer)
-
         # uploadcode: EVENTRATE, PH1, IN3, etc.
         uploadcode = item['data_uploadcode']
         # value: actual data value
@@ -85,15 +83,15 @@ def store_event(datafile, cluster, station_id, event):
             if key in data:
                 data[key][index] = value
             else:
-                logger.warning('Datatype not known on server side: %s '
-                               '(%s)' % (key, eventtype))
+                logger.warning('Datatype not known on server side: %s (%s)'
+                               % (key, eventtype))
         else:
             # uploadcode: EVENTRATE, RED, etc.
             if uploadcode in data:
                 data[uploadcode] = value
             else:
-                logger.warning('Datatype not known on server side: %s '
-                               '(%s)' % (uploadcode, eventtype))
+                logger.warning('Datatype not known on server side: %s (%s)'
+                               % (uploadcode, eventtype))
 
     # write data values to row
     for key, value in upload_codes.items():
@@ -105,6 +103,7 @@ def store_event(datafile, cluster, station_id, event):
     table.flush()
     blobs.flush()
 
+
 def data_is_blob(uploadcode, blob_types):
     """Determine if data is a variable length binary value (blob)"""
 
@@ -115,26 +114,29 @@ def data_is_blob(uploadcode, blob_types):
         return True
     return False
 
+
 def store_event_list(data_dir, station_id, cluster, event_list):
     """Store a list of events"""
 
     prev_date = None
     datafile = None
     for event in event_list:
-
-        # FIXME: add try/except for storing events (can crash writer)
-
-        timestamp = event['header']['datetime']
-        if timestamp:
-            date = timestamp.date()
-            if date != prev_date:
-                if datafile:
-                    datafile.close()
-                datafile = storage.open_or_create_file(data_dir, date)
-                prev_date = date
-            store_event(datafile, cluster, station_id, event)
-        else:
-            logger.error("Strange event (no timestamp!), discarding.")
+        try:
+            timestamp = event['header']['datetime']
+            if timestamp:
+                date = timestamp.date()
+                if date != prev_date:
+                    if datafile:
+                        datafile.close()
+                    datafile = storage.open_or_create_file(data_dir, date)
+                    prev_date = date
+                store_event(datafile, cluster, station_id, event)
+            else:
+                logger.error("Strange event (no timestamp!), discarding event "
+                             "(station: %s)" % station_id)
+        except:
+            logger.error("Unable to process event, discarding event (station: %s)"
+                         % station_id)
 
     if datafile:
         datafile.close()
