@@ -1,4 +1,5 @@
 # Python >= 2.5 has hashlib
+
 try:
     from hashlib import md5
     def md5_sum(s):
@@ -8,4 +9,3 @@ except:
     import md5
     def md5_sum(s):
         return md5.new(s).hexdigest()
-

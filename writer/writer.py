@@ -62,6 +62,7 @@ def writer(configfile):
     except:
         logger.exception('Exception occured, quitting.')
 
+
 def process_data(file):
     with open(file) as handle:
         data = pickle.load(handle)

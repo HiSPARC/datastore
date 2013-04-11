@@ -85,6 +85,7 @@ def application(environ, start_response, configfile):
         logger.debug("Station %d: succesfully completed" % station_id)
         return [str(RC_OK)]
 
+
 def do_init(configfile):
     """Load configuration and passwords and set up a logger handler
 
@@ -105,7 +106,7 @@ def do_init(configfile):
     if not logger.handlers:
         file = config.get('General', 'log') + '-wsgi.%d' % os.getpid()
         handler = logging.handlers.TimedRotatingFileHandler(file,
-                        when='midnight', backupCount=14)
+                    when='midnight', backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
@@ -124,6 +125,7 @@ def do_init(configfile):
                     num, cluster, password = station
                     num = int(num)
                     station_list[num] = (cluster, password)
+
 
 def store_data(station_id, cluster, event_list):
     """Store verified event data to temporary storage"""
@@ -145,9 +147,10 @@ def store_data(station_id, cluster, event_list):
 
     shutil.move(file.name, dir)
 
+
 def is_data_suspicious(event_list):
     """Check data for suspiciousness
-    
+
     Suspiciousness, a previously unknown quantum number that may signify
     the actual birth of the universe and the reweaving of past fates into
     current events has come to hunt us and our beloved data.

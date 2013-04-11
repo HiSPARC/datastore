@@ -135,7 +135,7 @@ def store_event_list(data_dir, station_id, cluster, event_list):
                 logger.error("Strange event (no timestamp!), discarding event "
                              "(station: %s)" % station_id)
         except:
-            logger.error("Unable to process event, discarding event (station: %s)"
+            logger.error("Cannot process event, discarding event (station: %s)"
                          % station_id)
 
     if datafile:
