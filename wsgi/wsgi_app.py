@@ -136,8 +136,7 @@ def store_data(station_id, cluster, event_list):
     tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
     if is_data_suspicious(event_list):
-        dir = os.path.join(config.get('General', 'data_dir'),
-                           'suspicious')
+        dir = os.path.join(config.get('General', 'data_dir'), 'suspicious')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
     data = {'station_id': station_id, 'cluster': cluster,
@@ -157,6 +156,6 @@ def is_data_suspicious(event_list):
 
     """
     for event in event_list:
-        if event['header']['datetime'].year == 2008:
+        if event['header']['datetime'].year < 2013:
             return True
     return False
