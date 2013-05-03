@@ -124,7 +124,6 @@ class HisparcConfiguration(tables.IsDescription):
     slv_ch2_comp_gain = tables.Float64Col()
     slv_ch2_comp_offset = tables.Float64Col()
 
-class HisparcWeather(tables.IsDescription):
 
 class HisparcComparator(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
@@ -136,6 +135,7 @@ class HisparcComparator(tables.IsDescription):
     count = tables.UInt16Col(pos=6)
 
 
+class WeatherEvent(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
     temp_inside = tables.Float32Col(pos=2)
@@ -245,8 +245,7 @@ def get_or_create_node(file, cluster, node):
             node = file.createVLArray(cluster, 'blobs', tables.VLStringAtom(),
                                       'HiSPARC binary data')
         elif node == 'weather':
-            node = file.createTable(cluster, 'weather',
-                                    HisparcWeather,
+            node = file.createTable(cluster, 'weather', WeatherEvent,
                                     'HiSPARC weather data')
         file.flush()
 
