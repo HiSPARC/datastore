@@ -4,40 +4,34 @@ import os
 
 
 class HisparcClusters(tables.IsDescription):
-    station_id = tables.UInt32Col(pos=1)
-    cluster_id = tables.StringCol(40, pos=2)
-    password = tables.StringCol(20, pos=3)
-    description = tables.StringCol(20, pos=4)
-       
+    station_id = tables.UInt32Col(pos=0)
+    cluster_id = tables.StringCol(40, pos=1)
+    password = tables.StringCol(20, pos=2)
+    description = tables.StringCol(20, pos=3)
+
+
 class HisparcEvent(tables.IsDescription):
     # DISCUSS: use of signed (dflt -1) vs unsigned (labview code)
     event_id = tables.UInt32Col(pos=0)
-    timestamp = tables.Time32Col(pos=2)
-    nanoseconds = tables.UInt32Col(pos=3)
-    ext_timestamp = tables.UInt64Col(pos=4)
-    data_reduction = tables.BoolCol(pos=5)
-    trigger_pattern = tables.UInt32Col(pos=6)
-    baseline = tables.Int16Col(shape=4, dflt=-1, pos=7)
-    std_dev = tables.Int16Col(shape=4, dflt=-1, pos=8)
-    n_peaks = tables.Int16Col(shape=4, dflt=-1, pos=9)
-    pulseheights = tables.Int16Col(shape=4, dflt=-1, pos=10)
-    integrals = tables.Int32Col(shape=4, dflt=-1, pos=11)
-    traces = tables.Int32Col(shape=4, dflt=-1, pos=12)
-    event_rate = tables.Float32Col(pos=13)
-       
+    timestamp = tables.Time32Col(pos=1)
+    nanoseconds = tables.UInt32Col(pos=2)
+    ext_timestamp = tables.UInt64Col(pos=3)
+    data_reduction = tables.BoolCol(pos=4)
+    trigger_pattern = tables.UInt32Col(pos=5)
+    baseline = tables.Int16Col(shape=4, dflt=-1, pos=6)
+    std_dev = tables.Int16Col(shape=4, dflt=-1, pos=7)
+    n_peaks = tables.Int16Col(shape=4, dflt=-1, pos=8)
+    pulseheights = tables.Int16Col(shape=4, dflt=-1, pos=9)
+    integrals = tables.Int32Col(shape=4, dflt=-1, pos=10)
+    traces = tables.Int32Col(shape=4, dflt=-1, pos=11)
+    event_rate = tables.Float32Col(pos=12)
+
+
 class HisparcError(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=2)
     messages = tables.Int32Col(pos=3)
 
-class HisparcComparatorData(tables.IsDescription):
-    event_id = tables.UInt32Col(pos=0)
-    timestamp = tables.Time32Col(pos=2)
-    nanoseconds = tables.UInt32Col(pos=3)
-    ext_timestamp = tables.UInt64Col(pos=4)
-    device = tables.UInt8Col(pos=5)
-    comparator = tables.UInt8Col(pos=6)
-    count = tables.UInt16Col(pos=7)
 
 class HisparcConfiguration(tables.IsDescription):
     event_id = tables.UInt32Col()
@@ -131,6 +125,17 @@ class HisparcConfiguration(tables.IsDescription):
     slv_ch2_comp_offset = tables.Float64Col()
 
 class HisparcWeather(tables.IsDescription):
+
+class HisparcComparator(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    nanoseconds = tables.UInt32Col(pos=2)
+    ext_timestamp = tables.UInt64Col(pos=3)
+    device = tables.UInt8Col(pos=4)
+    comparator = tables.UInt8Col(pos=5)
+    count = tables.UInt16Col(pos=6)
+
+
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
     temp_inside = tables.Float32Col(pos=2)
@@ -160,14 +165,14 @@ def open_or_create_file(data_dir, date):
 
     """
     dir = os.path.join(data_dir, '%d/%d' % (date.year, date.month))
-    file = os.path.join(dir, '%d_%d_%d.h5' % (date.year, date.month,
-                                              date.day))
+    file = os.path.join(dir, '%d_%d_%d.h5' % (date.year, date.month, date.day))
 
     if not os.path.exists(dir):
         # create dir and parent dirs with mode rwxr-xr-x
         os.makedirs(dir, 0755)
 
     return tables.openFile(file, 'a')
+
 
 def get_or_create_station_group(file, cluster, station_id):
     """Get an existing station group or create a new one
@@ -187,6 +192,7 @@ def get_or_create_station_group(file, cluster, station_id):
         file.flush()
 
     return station
+
 
 def get_or_create_cluster_group(file, cluster):
     """Get an existing cluster group or create a new one
@@ -211,6 +217,7 @@ def get_or_create_cluster_group(file, cluster):
 
     return cluster
 
+
 def get_or_create_node(file, cluster, node):
     """Get an existing node or create a new one
 
@@ -228,18 +235,15 @@ def get_or_create_node(file, cluster, node):
         elif node == 'errors':
             node = file.createTable(cluster, 'errors', HisparcError,
                                     'HiSPARC error messages')
+        elif node == 'config':
+            node = file.createTable(cluster, 'config', HisparcConfiguration,
+                                    'HiSPARC configuration messages')
         elif node == 'comparator':
-            node = file.createTable(cluster, 'comparator',
-                                    HisparcComparatorData,
+            node = file.createTable(cluster, 'comparator', HisparcComparator,
                                     'HiSPARC comparator messages')
         elif node == 'blobs':
-            node = file.createVLArray(cluster, 'blobs',
-                                      tables.VLStringAtom(),
+            node = file.createVLArray(cluster, 'blobs', tables.VLStringAtom(),
                                       'HiSPARC binary data')
-        elif node == 'config':
-            node = file.createTable(cluster, 'config',
-                                    HisparcConfiguration,
-                                    'HiSPARC configuration messages')
         elif node == 'weather':
             node = file.createTable(cluster, 'weather',
                                     HisparcWeather,
