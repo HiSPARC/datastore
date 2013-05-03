@@ -154,6 +154,56 @@ class WeatherEvent(tables.IsDescription):
     wind_chill = tables.Float32Col(pos=15)
 
 
+class WeatherError(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    messages = tables.Int32Col(pos=2)
+
+
+class WeatherConfig(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    # FIXME
+    # Figure out what config settings the weather daq will have and input here
+
+
+class LightningEvent(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    corr_distance = tables.Int16Col(pos=2)
+    uncorr_distance = tables.Int16Col(pos=3)
+    uncorr_angle = tables.Float32Col(pos=4)
+    corr_angle = tables.Float32Col(pos=5)
+
+
+class LightningError(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    messages = tables.Int32Col(pos=2)
+
+
+class LightningConfig(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    # FIXME
+    # Figure out what config settings the lightning daq will have and input here
+
+
+class LightningStatus(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    close_rate = tables.Int16Col(pos=2)
+    total_rate = tables.Int16Col(pos=3)
+    close_alarm = tables.BoolCol(pos=4)
+    sever_alarm = tables.BoolCol(pos=5)
+    current_heading = tables.Float32Col(pos=6)
+
+
+class LightningNoise(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+
+
 def open_or_create_file(data_dir, date):
     """Open an existing file or create a new one
 
@@ -247,6 +297,27 @@ def get_or_create_node(file, cluster, node):
         elif node == 'weather':
             node = file.createTable(cluster, 'weather', WeatherEvent,
                                     'HiSPARC weather data')
+        elif node == 'weather_errors':
+            node = file.createTable(cluster, 'weather_errors', WeatherError,
+                                    'HiSPARC weather error messages')
+        elif node == 'weather_config':
+            node = file.createTable(cluster, 'weather_config', WeatherConfig,
+                                    'HiSPARC weather configuration messages')
+        elif node == 'lightning':
+            node = file.createTable(cluster, 'lightning', LightningEvent,
+                                    'HiSPARC lightning data')
+        elif node == 'lightning_errors':
+            node = file.createTable(cluster, 'lightning_errors', LightningError,
+                                    'HiSPARC lightning error messages')
+        elif node == 'lightning_config':
+            node = file.createTable(cluster, 'lightning_config', LightningError,
+                                    'HiSPARC lightning configuration messages')
+        elif node == 'lightning_status':
+            node = file.createTable(cluster, 'lightning_status', LightningError,
+                                    'HiSPARC lightning status messages')
+        elif node == 'lightning_noise':
+            node = file.createTable(cluster, 'lightning_noise', LightningError,
+                                    'HiSPARC lightning noise messages')
         file.flush()
 
     return node
