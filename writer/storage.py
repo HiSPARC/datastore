@@ -163,8 +163,36 @@ class WeatherError(tables.IsDescription):
 class WeatherConfig(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
-    # FIXME
-    # Figure out what config settings the weather daq will have and input here
+    com_port = tables.Int16Col(pos=2)
+    baud_rate = tables.Int16Col(pos=3)
+    station_id = tables.Int16Col(pos=4)
+    database_name = tables.Int32Col(pos=5)
+    help_url = tables.Int32Col(pos=6)
+    daq_mode = tables.BoolCol(pos=7)
+    latitude = tables.Float32Col(pos=8)
+    longitude = tables.Float32Col(pos=9)
+    temperature_inside = tables.BoolCol(pos=10)
+    temperature_outside = tables.BoolCol(pos=11)
+    humidity_inside = tables.BoolCol(pos=12)
+    humidity_outside = tables.BoolCol(pos=13)
+    barometer = tables.BoolCol(pos=14)
+    wind_direction = tables.BoolCol(pos=15)
+    wind_speed = tables.BoolCol(pos=16)
+    solar_radiation = tables.BoolCol(pos=17)
+    uv_index = tables.BoolCol(pos=18)
+    evapotranspiration = tables.BoolCol(pos=19)
+    rain_rate = tables.BoolCol(pos=20)
+    heat_index = tables.BoolCol(pos=21)
+    dew_point = tables.BoolCol(pos=22)
+    wind_chill = tables.BoolCol(pos=23)
+    offset_inside_temperature = tables.Float32Col(pos=24)
+    offset_outside_temperature = tables.Float32Col(pos=25)
+    offset_inside_humidity = tables.Int16Col(pos=26)
+    offset_outside_humidity = tables.Int16Col(pos=27)
+    offset_wind_direction = tables.Int16Col(pos=28)
+    offset_station_altitude = tables.Float32Col(pos=29)
+    offset_bar_sea_level = tables.Float32Col(pos=30)
+    altitude = tables.Float32Col(pos=31)
 
 
 class LightningEvent(tables.IsDescription):
