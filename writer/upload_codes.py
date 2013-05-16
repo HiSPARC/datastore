@@ -147,7 +147,7 @@ eventtype_upload_codes = {
     },
     'WCG': {
         '_tablename': 'weather_config',
-        '_blobs': [],
+        '_blobs': ['WCG_HELP_URL', 'WCG_DATABASE_NAME'],
         '_has_ext_time': False,
         'WCG_COM_PORT': 'com_port',
         'WCG_BAUD_RATE': 'baud_rate',
