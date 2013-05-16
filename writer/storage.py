@@ -163,7 +163,7 @@ class WeatherError(tables.IsDescription):
 class WeatherConfig(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
-    com_port = tables.Int16Col(pos=2)
+    com_port = tables.UInt8Col(pos=2)
     baud_rate = tables.Int16Col(pos=3)
     station_id = tables.Int16Col(pos=4)
     database_name = tables.Int32Col(pos=5)
