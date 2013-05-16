@@ -30,7 +30,7 @@ class HisparcEvent(tables.IsDescription):
 class HisparcError(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=2)
-    messages = tables.Int32Col(pos=3)
+    messages = tables.Int32Col(dflt=-1, pos=3)
 
 
 class HisparcConfiguration(tables.IsDescription):
@@ -157,7 +157,7 @@ class WeatherEvent(tables.IsDescription):
 class WeatherError(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
-    messages = tables.Int32Col(pos=2)
+    messages = tables.Int32Col(dflt=-1, pos=2)
 
 
 class WeatherConfig(tables.IsDescription):
@@ -166,8 +166,8 @@ class WeatherConfig(tables.IsDescription):
     com_port = tables.UInt8Col(pos=2)
     baud_rate = tables.Int16Col(pos=3)
     station_id = tables.Int16Col(pos=4)
-    database_name = tables.Int32Col(pos=5)
-    help_url = tables.Int32Col(pos=6)
+    database_name = tables.Int32Col(dflt=-1, pos=5)
+    help_url = tables.Int32Col(dflt=-1, pos=6)
     daq_mode = tables.BoolCol(pos=7)
     latitude = tables.Float32Col(pos=8)
     longitude = tables.Float32Col(pos=9)
@@ -207,7 +207,7 @@ class LightningEvent(tables.IsDescription):
 class LightningError(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
-    messages = tables.Int32Col(pos=2)
+    messages = tables.Int32Col(dflt=-1, pos=2)
 
 
 class LightningConfig(tables.IsDescription):
