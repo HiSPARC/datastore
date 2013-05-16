@@ -165,12 +165,12 @@ class WeatherConfig(tables.IsDescription):
     timestamp = tables.Time32Col(pos=1)
     com_port = tables.UInt8Col(pos=2)
     baud_rate = tables.Int16Col(pos=3)
-    station_id = tables.Int16Col(pos=4)
+    station_id = tables.UInt32Col(pos=4)
     database_name = tables.Int32Col(dflt=-1, pos=5)
     help_url = tables.Int32Col(dflt=-1, pos=6)
     daq_mode = tables.BoolCol(pos=7)
-    latitude = tables.Float32Col(pos=8)
-    longitude = tables.Float32Col(pos=9)
+    latitude = tables.Float64Col(pos=8)
+    longitude = tables.Float64Col(pos=9)
     temperature_inside = tables.BoolCol(pos=10)
     temperature_outside = tables.BoolCol(pos=11)
     humidity_inside = tables.BoolCol(pos=12)
@@ -192,7 +192,7 @@ class WeatherConfig(tables.IsDescription):
     offset_wind_direction = tables.Int16Col(pos=28)
     offset_station_altitude = tables.Float32Col(pos=29)
     offset_bar_sea_level = tables.Float32Col(pos=30)
-    altitude = tables.Float32Col(pos=31)
+    altitude = tables.Float64Col(pos=31)
 
 
 class LightningEvent(tables.IsDescription):
