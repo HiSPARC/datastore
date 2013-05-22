@@ -213,8 +213,21 @@ class LightningError(tables.IsDescription):
 class LightningConfig(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
-    # FIXME
-    # Figure out what config settings the lightning daq will have and input here
+    com_port = tables.UInt8Col(pos=2)
+    baud_rate = tables.Int16Col(pos=3)
+    station_id = tables.UInt32Col(pos=4)
+    database_name = tables.Int32Col(dflt=-1, pos=5)
+    help_url = tables.Int32Col(dflt=-1, pos=6)
+    daq_mode = tables.BoolCol(pos=7)
+    latitude = tables.Float64Col(pos=8)
+    longitude = tables.Float64Col(pos=9)
+    altitude = tables.Float64Col(pos=10)
+    squelch_seting = tables.Int32Col(pos=11)
+    close_alarm_distance = tables.Int32Col(pos=12)
+    severe_alarm_distance = tables.Int32Col(pos=13)
+    noise_beep = tables.BoolCol(pos=14)
+    minimum_gps_speed = tables.Int32Col(pos=15)
+    angle_correction = tables.Float32Col(pos=16)
 
 
 class LightningStatus(tables.IsDescription):
