@@ -19,14 +19,6 @@ eventtype_upload_codes = {
         '_has_ext_time': False,
         'ERRMSG': 'messages',
     },
-    'CMP': {
-        '_tablename': 'comparator',
-        '_blobs': [],
-        '_has_ext_time': True,
-        'CMP_DEVICE': 'device',
-        'CMP_COMPARATOR': 'comparator',
-        'CMP_COUNT': 'count',
-    },
     'CFG': {
         '_tablename': 'config',
         '_blobs': ['CFG_MAS_VERSION', 'CFG_SLV_VERSION', 'CFG_PASSWORD',
@@ -119,6 +111,14 @@ eventtype_upload_codes = {
         'CFG_SLV_CH1COMPOFF': 'slv_ch1_comp_offset',
         'CFG_SLV_CH2COMPGAIN': 'slv_ch2_comp_gain',
         'CFG_SLV_CH2COMPOFF': 'slv_ch2_comp_offset',
+    },
+    'CMP': {
+        '_tablename': 'comparator',
+        '_blobs': [],
+        '_has_ext_time': True,
+        'CMP_DEVICE': 'device',
+        'CMP_COMPARATOR': 'comparator',
+        'CMP_COUNT': 'count',
     },
     'WTR': {
         '_tablename': 'weather',
