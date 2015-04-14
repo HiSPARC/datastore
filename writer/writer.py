@@ -34,7 +34,8 @@ def writer(configfile):
     # set up logger
     file = config.get('General', 'log') + '-writer'
     handler = logging.handlers.TimedRotatingFileHandler(file,
-                when='midnight', backupCount=14)
+                                                        when='midnight',
+                                                        backupCount=14)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
@@ -62,11 +63,11 @@ def writer(configfile):
     except:
         logger.exception('Exception occured, quitting.')
 
+
 def process_data(file):
     with open(file) as handle:
         data = pickle.load(handle)
 
     logger.debug('Processing data for station %d' % data['station_id'])
     store_event_list(config.get('General', 'data_dir'),
-                     data['station_id'], data['cluster'],
-                     data['event_list'])
+                     data['station_id'], data['cluster'], data['event_list'])

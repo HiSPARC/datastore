@@ -1,15 +1,12 @@
-import sys
-import os.path
 import calendar
 import base64
-import tables
 import logging
-import datetime
 
 import storage
 from upload_codes import eventtype_upload_codes
 
 logger = logging.getLogger('writer.store_events')
+
 
 def store_event(datafile, cluster, station_id, event):
     """Stores an event in the h5 filesystem
@@ -102,6 +99,7 @@ def store_event(datafile, cluster, station_id, event):
     table.flush()
     blobs.flush()
 
+
 def data_is_blob(uploadcode, blob_types):
     """Determine if data is a variable length binary value (blob)"""
 
@@ -112,6 +110,7 @@ def data_is_blob(uploadcode, blob_types):
         return True
     return False
 
+
 def store_event_list(data_dir, station_id, cluster, event_list):
     """Store a list of events"""
 
@@ -119,7 +118,7 @@ def store_event_list(data_dir, station_id, cluster, event_list):
     datafile = None
     for event in event_list:
         timestamp = event['header']['datetime']
-        if timestamp: 
+        if timestamp:
             date = timestamp.date()
             if date != prev_date:
                 if datafile:
