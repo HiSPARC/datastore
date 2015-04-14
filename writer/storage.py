@@ -1,4 +1,3 @@
-import csv
 import tables
 import os
 
