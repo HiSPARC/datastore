@@ -321,7 +321,7 @@ def get_or_create_node(file, cluster, node):
     except tables.NoSuchNodeError:
         if node == 'events':
             node = file.createTable(cluster, 'events', HisparcEvent,
-                                   'HiSPARC coincidences table')
+                                    'HiSPARC event data')
         elif node == 'errors':
             node = file.createTable(cluster, 'errors', HisparcError,
                                     'HiSPARC error messages')
@@ -350,13 +350,13 @@ def get_or_create_node(file, cluster, node):
             node = file.createTable(cluster, 'lightning_errors', LightningError,
                                     'HiSPARC lightning error messages')
         elif node == 'lightning_config':
-            node = file.createTable(cluster, 'lightning_config', LightningError,
+            node = file.createTable(cluster, 'lightning_config', LightningConfig,
                                     'HiSPARC lightning configuration messages')
         elif node == 'lightning_status':
-            node = file.createTable(cluster, 'lightning_status', LightningError,
+            node = file.createTable(cluster, 'lightning_status', LightningStatus,
                                     'HiSPARC lightning status messages')
         elif node == 'lightning_noise':
-            node = file.createTable(cluster, 'lightning_noise', LightningError,
+            node = file.createTable(cluster, 'lightning_noise', LightningNoise,
                                     'HiSPARC lightning noise messages')
         file.flush()
 
