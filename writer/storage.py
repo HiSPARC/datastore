@@ -1,5 +1,6 @@
-import tables
 import os
+
+import tables
 
 
 class HisparcClusters(tables.IsDescription):
