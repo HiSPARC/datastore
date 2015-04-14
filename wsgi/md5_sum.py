@@ -8,4 +8,3 @@ except:
     import md5
     def md5_sum(s):
         return md5.new(s).hexdigest()
-
