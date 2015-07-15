@@ -1,4 +1,4 @@
-### Migration GPS test data to test stations
+# Migrate GPS test data to test stations
 
 For a GPS offset test station 501 and 502 were triggered simultaneously
 using a pulsegenerator. The data is poluting the real cosmic data. The
@@ -15,7 +15,7 @@ See https://github.com/HiSPARC/datastore/issues/5
 
 
 ## Datastore
-# frome has an older version of PyTables
+### frome has an older version of PyTables
 
     cd /databases/frome/2011/10/
     cp 2011_10_{21..31}.h5 /data/hisparc/adelaat/temp_data/
