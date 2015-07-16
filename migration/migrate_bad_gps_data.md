@@ -71,8 +71,6 @@ The blobs will remain untouched, to prevent having to fix all the event
 trace references. The config node, containing only the one config, will
 be removed.
 
-    cd /databases/frome/
-
     PATH=/data/hisparc/env/miniconda/bin:$PATH
     source activate /data/hisparc/hisparc_env/
 
@@ -81,5 +79,23 @@ be removed.
     %cpaste
     import tables
     with tables.open_file('/databases/frome/2012/9/2012_9_26.h5', 'a') as data:
-        source = data.remove_node('/hisparc/cluster_amsterdam/station_503', 'config')
+        data.remove_node('/hisparc/cluster_amsterdam/station_503', 'config')
+    --
+
+
+### Configurations to be removed for 507
+
+    PATH=/data/hisparc/env/miniconda/bin:$PATH
+    source activate /data/hisparc/hisparc_env/
+
+    ipython
+
+    %cpaste
+    import tables
+    d = [(1999, 8, 22), (2010, 2, 16), (2010, 3, 15), (2010, 3, 16),
+         (2010, 6, 4), (2010, 6, 11), (2012, 11, 21), (2012, 12, 20)]
+    for yy, mm, dd in d:
+        path = '/databases/frome/{yy}/{mm}/{yy}_{mm}_{dd}.h5'.format(yy=yy, mm=yy, dd=dd)
+        with tables.open_file(path, 'a') as data:
+            data.remove_node('/hisparc/cluster_amsterdam/station_507', 'config')
     --
