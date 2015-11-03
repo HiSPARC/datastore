@@ -3,13 +3,6 @@ import os
 import tables
 
 
-class HisparcClusters(tables.IsDescription):
-    station_id = tables.UInt32Col(pos=0)
-    cluster_id = tables.StringCol(40, pos=1)
-    password = tables.StringCol(20, pos=2)
-    description = tables.StringCol(20, pos=3)
-
-
 class HisparcEvent(tables.IsDescription):
     # DISCUSS: use of signed (dflt -1) vs unsigned (labview code)
     event_id = tables.UInt32Col(pos=0)
