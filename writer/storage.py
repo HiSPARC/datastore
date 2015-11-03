@@ -148,6 +148,17 @@ class HisparcSingle(tables.IsDescription):
     slv_ch2_high = tables.UInt16Col(pos=9)
 
 
+class HisparcSatellite(tables.IsDescription):
+    event_id = tables.UInt32Col(pos=0)
+    timestamp = tables.Time32Col(pos=1)
+    min_n = tables.UInt16Col(pos=2)
+    mean_n = tables.Float32Col(pos=3)
+    max_n = tables.UInt16Col(pos=4)
+    min_signal = tables.UInt16Col(pos=5)
+    mean_signal = tables.Float32Col(pos=6)
+    max_signal = tables.UInt16Col(pos=7)
+
+
 class WeatherEvent(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
@@ -348,6 +359,9 @@ def get_or_create_node(file, cluster, node):
         elif node == 'singles':
             node = file.createTable(cluster, 'singles', HisparcSingle,
                                     'HiSPARC single messages')
+        elif node == 'satellites':
+            node = file.createTable(cluster, 'satellites', HisparcSatellite,
+                                    'HiSPARC satellite messages')
         elif node == 'blobs':
             node = file.createVLArray(cluster, 'blobs', tables.VLStringAtom(),
                                       'HiSPARC binary data')
