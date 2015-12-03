@@ -104,3 +104,22 @@ dates with bad gps data.
             data.remove_node('/hisparc/cluster_amsterdam/station_507', 'config')
         print 'removed config'
     --
+
+
+### 151203 - More configurations to remove
+
+For each station I retrieved all GPS locations and determined the distances
+between each pair of consecutive locations. In cases where this was more
+than 250 meters I investigated if this was correct or a mistake.
+For stations 22, 301, 2010, 4003, and 13001 I found bad locations.
+Often caused by required troubleshooting with the station PC at Nikhef.
+And once a close but not exactly (0., 0., 0.) locations.
+
+These bad configs, and in some cases also the test data from a pulse
+generator, have been removed.
+
+22 - 2015-10-29/30
+301 - 2014-12-2
+2010 - 2012-6-8
+4003 - 2014-4-2
+13001 - 2013-7-10
