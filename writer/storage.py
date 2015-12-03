@@ -371,13 +371,16 @@ def get_or_create_node(file, cluster, node):
             node = file.createTable(cluster, 'lightning', LightningEvent,
                                     'HiSPARC lightning data')
         elif node == 'lightning_errors':
-            node = file.createTable(cluster, 'lightning_errors', LightningError,
+            node = file.createTable(cluster, 'lightning_errors',
+                                    LightningError,
                                     'HiSPARC lightning error messages')
         elif node == 'lightning_config':
-            node = file.createTable(cluster, 'lightning_config', LightningConfig,
+            node = file.createTable(cluster, 'lightning_config',
+                                    LightningConfig,
                                     'HiSPARC lightning configuration messages')
         elif node == 'lightning_status':
-            node = file.createTable(cluster, 'lightning_status', LightningStatus,
+            node = file.createTable(cluster, 'lightning_status',
+                                    LightningStatus,
                                     'HiSPARC lightning status messages')
         elif node == 'lightning_noise':
             node = file.createTable(cluster, 'lightning_noise', LightningNoise,
