@@ -72,7 +72,7 @@ trace references. The config node, containing only the one config, will
 be removed.
 
     PATH=/data/hisparc/env/miniconda/bin:$PATH
-    source activate /data/hisparc/hisparc_env/
+    source activate hisparc
 
     ipython
 
@@ -89,7 +89,7 @@ No config in raw data for (2010, 2, 16). Remove the configs for the other
 dates with bad gps data.
 
     PATH=/data/hisparc/env/miniconda/bin:$PATH
-    source activate /data/hisparc/hisparc_env/
+    source activate hisparc
 
     ipython
 
