@@ -124,3 +124,30 @@ This affects station 501 from 2015-05-13 up to 2015-11-24 16:00.
 
     if __name__ == '__main__':
         migrate_configs(501, 'amsterdam', (2015, 5, 13), (2015, 11, 25))
+
+
+Station 502 is also affected in two configs, one contains the 'correct' mV
+value, but relative to the 200 ADC baseline. The second seems to contain the
+wrong threshold values. For both all thresholds will be set to 200 ADC counts.
+
+    PATH=/data/hisparc/env/miniconda/bin:$PATH
+    source activate hisparc
+    ipython
+    %cpaste
+    import tables
+
+    thresholds = ['mas_ch1_thres_low', 'mas_ch1_thres_high',
+                  'mas_ch2_thres_low', 'mas_ch2_thres_high',
+                  'slv_ch1_thres_low', 'slv_ch1_thres_high',
+                  'slv_ch2_thres_low', 'slv_ch2_thres_high']
+    node_path = '/hisparc/cluster_amsterdam/station_502'
+    paths = ['/databases/frome/2012/6/2012_6_8.h5',
+             '/databases/frome/2012/7/2012_7_30.h5']
+    for path in paths:
+        with tables.open_file(path, 'a') as data:
+            node = data.get_node(node_path)
+            for row in node.config:
+                for threshold in thresholds:
+                    row[threshold] = 200
+                row.update()
+    --
