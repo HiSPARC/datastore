@@ -22,4 +22,25 @@ Not only events but also some errors and weather data (station 8006) is removed.
         for station, cluster in zip(stations, clusters):
             data.remove_node('/hisparc/cluster_%s' % cluster, 'station_%d' % station, recursive=True)
     --
+
+
+# Remove badly comrpessed data for a station
+
+The trace data for station 3201 for 2011/2/14 is corrupted.
+Unpacking one of the traces results in an error:
+
+    Error -3 while decompressing data: incorrect header check
+
+So the data for that station is removed.
+
+    PATH=/data/hisparc/env/miniconda/bin:$PATH
+    source activate hisparc
+    ipython
     %cpaste
+    import tables
+    from sapphire import Station
+    station = 3201
+    cluster = Station(station).cluster().lower()
+    with tables.open_file('/databases/frome/2011/2/2011_2_14.h5', 'a') as data:
+        data.remove_node('/hisparc/cluster_%s' % cluster, 'station_%d' % station, recursive=True)
+    --
