@@ -22,16 +22,4 @@ Not only events but also some errors and weather data (station 8006) is removed.
         for station, cluster in zip(stations, clusters):
             data.remove_node('/hisparc/cluster_%s' % cluster, 'station_%d' % station, recursive=True)
     --
-
-
-
-%cpaste
-from django_publicdb.histograms.models import Summary, NetworkSummary
-import datetime as dt
- 
-DATE = dt.date(2012, 11, 5)
-summaries = Summary.objects.filter(date=DATE)
-summaries.delete()
-networksummary = NetworkSummary.objects.get(date=DATE)
-networksummary.delete()
---
+    %cpaste
