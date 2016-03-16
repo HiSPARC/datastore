@@ -60,9 +60,9 @@ used the following script:
 
 
     if __name__ == '__main__':
-        migrate_configs(102, 'amsterdam', (2015, 10, 22), (2016, 2, 16))
+        migrate_configs(102, 'amsterdam', (2015, 10, 19), (2016, 2, 16))
         migrate_configs(202, 'amsterdam', (2015, 10, 30), (2016, 2, 17))
-        migrate_configs(599, 'amsterdam', (2015, 10, 22), (2016, 2, 17))
+        migrate_configs(599, 'amsterdam', (2015, 10, 19), (2016, 2, 17))
 
 
 ## 160304 - Convert mV thresholds to ADC for baseline at 30 ADC counts
