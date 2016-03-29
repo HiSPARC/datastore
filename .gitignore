@@ -1,5 +1,7 @@
 # Specific
 station_list.csv
+config.ini
+writer_app.py
 *.h5
 
 # Python
