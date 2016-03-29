@@ -7,5 +7,4 @@ configfile = ('/home/david/work/HiSPARC/software/bzr/datastore/examples'
               '/config.ini')
 
 import wsgi_app
-application = functools.partial(wsgi_app.application,
-                                configfile=configfile)
+application = functools.partial(wsgi_app.application, configfile=configfile)
