@@ -1,3 +1,0 @@
-- Undo support (transaction-like) for handling exceptions and recovering
-  from them.  Might remove the need for 'partial'?
-- Check for signed / unsigned troubles client-side. -999 etc.

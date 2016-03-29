@@ -1,10 +1,6 @@
-import sys
-import os.path
 import calendar
 import base64
-import tables
 import logging
-import datetime
 
 import storage
 from upload_codes import eventtype_upload_codes

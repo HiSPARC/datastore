@@ -2,10 +2,9 @@
 
 import sys
 
-sys.path.append('/home/david/work/HiSPARC/software/bzr/datastore/writer')
+sys.path.append('/var/www/wsgi-bin/datastore/writer')
 
 import writer
 
-configfile = ('/home/david/work/HiSPARC/software/bzr/datastore/examples'
-              '/config.ini')
+configfile = '/var/www/wsgi-bin/datastore/examples/config.ini'
 writer.writer(configfile)

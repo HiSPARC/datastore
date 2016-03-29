@@ -1,11 +1,9 @@
 import sys
 import functools
 
-sys.path.append('/home/david/work/HiSPARC/software/bzr/datastore/wsgi')
-
-configfile = ('/home/david/work/HiSPARC/software/bzr/datastore/examples'
-              '/config.ini')
+sys.path.append('/var/www/wsgi-bin/datastore/wsgi')
 
 import wsgi_app
-application = functools.partial(wsgi_app.application,
-                                configfile=configfile)
+
+configfile = '/var/www/wsgi-bin/datastore/examples/config.ini'
+application = functools.partial(wsgi_app.application, configfile=configfile)

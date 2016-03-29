@@ -9,7 +9,8 @@ import csv
 import os
 import shutil
 
-from rcodes import *
+from rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
+                    RC_PE_INV_STATIONID, RC_OK)
 
 LEVELS = {'debug': logging.DEBUG,
           'info': logging.INFO,
@@ -106,7 +107,8 @@ def do_init(configfile):
     if not logger.handlers:
         file = config.get('General', 'log') + '-wsgi.%d' % os.getpid()
         handler = logging.handlers.TimedRotatingFileHandler(file,
-                    when='midnight', backupCount=14)
+                                                            when='midnight',
+                                                            backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
