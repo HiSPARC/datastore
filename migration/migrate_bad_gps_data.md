@@ -124,3 +124,29 @@ generator, have been removed.
 4003 - 2014-4-2
 13001 - 2013-7-10
 
+
+### 160330 - Station 3201 recieved electronics from 3202
+
+On 2011-2-17 station 3201 submitted a new config using electronics which
+used to belong to station 3202. The GPS coordinates were not yet updated.
+With this the GPS coordinates are changed to the next valid GPS coordinates
+submitted (rounded to 6 decimal places).
+
+    PATH=/data/hisparc/env/miniconda/bin:$PATH
+    source activate hisparc
+    ipython
+    %cpaste
+    import tables
+
+    keysvalues = [('gps_latitude', 51.753864),
+                  ('gps_longitude', 4.158942),
+                  ('gps_altitude', 53.360270)]
+    node_path = '/hisparc/cluster_leiden/station_3201'
+    path = '/databases/frome/2011/4/2011_4_28.h5'
+    with tables.open_file(path, 'a') as data:
+        node = data.get_node(node_path)
+        for row in node.config:
+            for key, value in keysvalues:
+                row[key] = value
+            row.update()
+    --
