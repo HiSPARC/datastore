@@ -21,6 +21,6 @@ class FakeMessage(object):
 
 datastore = pysparc.storage.NikhefDataStore(99, 'fake_station',
                                             url='http://localhost:8083')
-for i in range(3):
+for i in range(100):
     event = pysparc.events.Event(FakeMessage())
     datastore.store_event(event)
