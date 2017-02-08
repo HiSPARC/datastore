@@ -296,7 +296,7 @@ def get_or_create_station_group(file, cluster, station_id):
         station = file.get_node(cluster, node_name)
     except tables.NoSuchNodeError:
         station = file.create_group(cluster, node_name,
-                                   'HiSPARC station %d data' % station_id)
+                                    'HiSPARC station %d data' % station_id)
         file.flush()
 
     return station
@@ -320,7 +320,7 @@ def get_or_create_cluster_group(file, cluster):
         cluster = file.get_node(hisparc, node_name)
     except tables.NoSuchNodeError:
         cluster = file.create_group(hisparc, node_name,
-                                   'HiSPARC cluster %s data' % cluster)
+                                    'HiSPARC cluster %s data' % cluster)
         file.flush()
 
     return cluster
@@ -377,13 +377,15 @@ def get_or_create_node(file, cluster, node):
         elif node == 'lightning_config':
             node = file.create_table(cluster, 'lightning_config',
                                      LightningConfig,
-                                     'HiSPARC lightning configuration messages')
+                                     'HiSPARC lightning configuration '
+                                     'messages')
         elif node == 'lightning_status':
             node = file.create_table(cluster, 'lightning_status',
                                      LightningStatus,
                                      'HiSPARC lightning status messages')
         elif node == 'lightning_noise':
-            node = file.create_table(cluster, 'lightning_noise', LightningNoise,
+            node = file.create_table(cluster, 'lightning_noise',
+                                     LightningNoise,
                                      'HiSPARC lightning noise messages')
         file.flush()
 
