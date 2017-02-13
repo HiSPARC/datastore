@@ -131,14 +131,14 @@ class HisparcComparator(tables.IsDescription):
 class HisparcSingle(tables.IsDescription):
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
-    mas_ch1_low = tables.UInt16Col(pos=2)
-    mas_ch1_high = tables.UInt16Col(pos=3)
-    mas_ch2_low = tables.UInt16Col(pos=4)
-    mas_ch2_high = tables.UInt16Col(pos=5)
-    slv_ch1_low = tables.UInt16Col(pos=6)
-    slv_ch1_high = tables.UInt16Col(pos=7)
-    slv_ch2_low = tables.UInt16Col(pos=8)
-    slv_ch2_high = tables.UInt16Col(pos=9)
+    mas_ch1_low = tables.Int32Col(dflt=-1, pos=2)
+    mas_ch1_high = tables.Int32Col(dflt=-1, pos=3)
+    mas_ch2_low = tables.Int32Col(dflt=-1, pos=4)
+    mas_ch2_high = tables.Int32Col(dflt=-1, pos=5)
+    slv_ch1_low = tables.Int32Col(dflt=-1, pos=6)
+    slv_ch1_high = tables.Int32Col(dflt=-1, pos=7)
+    slv_ch2_low = tables.Int32Col(dflt=-1, pos=8)
+    slv_ch2_high = tables.Int32Col(dflt=-1, pos=9)
 
 
 class HisparcSatellite(tables.IsDescription):
