@@ -56,6 +56,11 @@ class MigrateSingles(object):
 
         logging.info('Migrating table: %s' % table_path)
         group, table_name, sn = self._parse_path(table_path)
+
+        if table_name != 'singles':
+            logging.error('Table %s not `singles` skipping!' % table_path)
+            return None
+
         tmp_table_name = '_t_%s' % table_name
 
         try:
@@ -75,7 +80,8 @@ class MigrateSingles(object):
 
         tmptable.append(data)
         tmptable.flush()
-        self.data.rename_node(tmptable, table_name, overwrite=True)
+        self.data.rename_node(table, 'singles_old')
+        self.data.rename_node(tmptable, 'singles')
 
     def _parse_path(self, path):
         """ '/cluster/s501/singles' ---> '/cluster/s501' 'singles', 501 """
