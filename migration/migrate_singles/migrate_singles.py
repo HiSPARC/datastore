@@ -133,6 +133,8 @@ def get_queue(datastore_path):
             for node in data.walk_nodes('/', 'Table'):
                 table_path = node._v_pathname
                 if '/singles' in table_path:
+                    if 'singles_old' in table_path:
+                        continue
                     type_ = type(node.description.mas_ch1_low)
                     if type_ == tables.UInt16Col:
                         logging.debug('Found: %s' % table_path)
