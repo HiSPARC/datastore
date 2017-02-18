@@ -9,8 +9,9 @@ import csv
 import os
 import shutil
 
-from .rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
-                     RC_PE_INV_STATIONID, RC_OK)
+from rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
+                    RC_PE_INV_STATIONID, RC_OK)
+
 
 LEVELS = {'debug': logging.DEBUG,
           'info': logging.INFO,
@@ -47,7 +48,7 @@ def application(environ, start_response, configfile):
     start_response(status, response_headers)
 
     # read data from the POST variables
-    input = environ['wsgi.input'].readline()
+    input = environ['wsgi.input'].readline().decode()
     vars = urllib.parse.parse_qs(input)
 
     # process POST data
@@ -58,33 +59,40 @@ def application(environ, start_response, configfile):
         password = vars['password'][0]
     except (KeyError, EOFError):
         logger.debug("POST (vars) error")
-        return [str(RC_ISE_INV_POSTDATA)]
+        return [RC_ISE_INV_POSTDATA]
     else:
-        our_checksum = hashlib.md5(data).hexdigest()
+        our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
             logger.debug("Station %d: checksum mismatch" % station_id)
-            return [str(RC_PE_INV_AUTHCODE)]
+            return [RC_PE_INV_AUTHCODE]
         else:
             try:
-                event_list = pickle.loads(data)
+                try:
+                    event_list = pickle.loads(data.encode('iso-8859-1'))
+                except UnicodeDecodeError:
+                    # string was probably pickled on python 2.
+                    # decode as bytes and decode all bytestrings to string.
+                    event_list = decode_object(
+                        pickle.loads(data.encode('iso-8859-1'),
+                                     encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
                 logger.debug("Station %d: pickling error" % station_id)
-                return [str(RC_ISE_INV_POSTDATA)]
+                return [RC_ISE_INV_POSTDATA]
 
     try:
         cluster, station_password = station_list[station_id]
     except KeyError:
         logger.debug("Station %d is unknown" % station_id)
-        return [str(RC_PE_INV_STATIONID)]
+        return [RC_PE_INV_STATIONID]
 
     if station_password != password:
         logger.debug("Station %d: password mismatch: %s" % (station_id,
                                                             password))
-        return [str(RC_PE_INV_AUTHCODE)]
+        return [RC_PE_INV_AUTHCODE]
     else:
         store_data(station_id, cluster, event_list)
         logger.debug("Station %d: succesfully completed" % station_id)
-        return [str(RC_OK)]
+        return [RC_OK]
 
 
 def do_init(configfile):
@@ -161,3 +169,16 @@ def is_data_suspicious(event_list):
         if event['header']['datetime'].year < 2013:
             return True
     return False
+
+
+def decode_object(o):
+    """recursively decode all bytestrings in object"""
+
+    if type(o) is bytes:
+        return o.decode()
+    elif type(o) is dict:
+        return {decode_object(k): decode_object(v) for k, v in o.items()}
+    elif type(o) is list:
+        return [decode_object(obj) for obj in o]
+    else:
+        return o
