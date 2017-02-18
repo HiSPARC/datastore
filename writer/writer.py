@@ -6,10 +6,10 @@
 """
 import logging
 import logging.handlers
-import ConfigParser
+import configparser
 import os
 import time
-import cPickle as pickle
+import pickle as pickle
 import shutil
 
 from store_events import store_event_list
@@ -28,7 +28,7 @@ formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
 def writer(configfile):
     # set up config
     global config
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(configfile)
 
     # set up logger

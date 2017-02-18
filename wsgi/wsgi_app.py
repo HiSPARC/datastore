@@ -1,16 +1,16 @@
 import hashlib
-import urlparse
-import cPickle as pickle
+import urllib.parse
+import pickle as pickle
 import logging
 import logging.handlers
 import tempfile
-import ConfigParser
+import configparser
 import csv
 import os
 import shutil
 
-from rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
-                    RC_PE_INV_STATIONID, RC_OK)
+from .rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
+                     RC_PE_INV_STATIONID, RC_OK)
 
 LEVELS = {'debug': logging.DEBUG,
           'info': logging.INFO,
@@ -48,7 +48,7 @@ def application(environ, start_response, configfile):
 
     # read data from the POST variables
     input = environ['wsgi.input'].readline()
-    vars = urlparse.parse_qs(input)
+    vars = urllib.parse.parse_qs(input)
 
     # process POST data
     try:
@@ -100,7 +100,7 @@ def do_init(configfile):
     try:
         config
     except NameError:
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(configfile)
 
     # set up logger
