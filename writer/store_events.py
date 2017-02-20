@@ -68,7 +68,7 @@ def store_event(datafile, cluster, station_id, event):
             # data should be stored inside the blob array, ...
             if uploadcode[:-1] == 'TR':
                 # traces are base64 encoded
-                value = base64.decodestring(value)
+                value = base64.decodestring(value.encode('iso-8859-1'))
             blobs.append(value)
             # ... with a pointer stored in the event table
             value = len(blobs) - 1
