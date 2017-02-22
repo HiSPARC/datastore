@@ -10,7 +10,8 @@ import os
 import shutil
 
 from rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
-                    RC_PE_INV_STATIONID, RC_OK)
+                    RC_PE_INV_STATIONID, RC_PE_INV_INPUT,
+                    RC_PE_PICKLING_ERROR, RC_OK)
 
 
 LEVELS = {'debug': logging.DEBUG,
@@ -64,7 +65,7 @@ def application(environ, start_response, configfile):
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
             logger.debug("Station %d: checksum mismatch" % station_id)
-            return [RC_PE_INV_AUTHCODE]
+            return [RC_PE_INV_INPUT]
         else:
             try:
                 try:
@@ -72,12 +73,14 @@ def application(environ, start_response, configfile):
                 except UnicodeDecodeError:
                     # string was probably pickled on python 2.
                     # decode as bytes and decode all bytestrings to string.
+                    logger.debug('UnicodeDecodeError on python 2 pickle.'
+                                 ' Decoding bytestrings.')
                     event_list = decode_object(
                         pickle.loads(data.encode('iso-8859-1'),
                                      encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
                 logger.debug("Station %d: pickling error" % station_id)
-                return [RC_ISE_INV_POSTDATA]
+                return [RC_PE_PICKLING_ERROR]
 
     try:
         cluster, station_password = station_list[station_id]
@@ -149,6 +152,7 @@ def store_data(station_id, cluster, event_list):
         dir = os.path.join(config.get('General', 'data_dir'), 'suspicious')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
+    logger.debug('Filename: %s' % file.name)
     data = {'station_id': station_id, 'cluster': cluster,
             'event_list': event_list}
     pickle.dump(data, file)
