@@ -1,11 +1,10 @@
 import unittest
-import requests
 import functools
 import hashlib
+import glob
+import os
 import pickle
-import shutil
 import sys
-from io import StringIO
 
 from webtest import TestApp
 
@@ -13,6 +12,7 @@ from webtest import TestApp
 # configuration:
 CONFIGFILE = 'test_data/config.ini'
 WSGI_APP_PATH = '../wsgi'
+DATASTORE_PATH = 'fake_datastore'
 
 STATION_ID = 99
 PASSWORD = 'fake_station'
@@ -41,31 +41,39 @@ class TestWsgiApp(unittest.TestCase):
         self.password = PASSWORD
         self.app = TestApp(get_wsgi_app())
 
+    def tearDown(self):
+        self.clean_datastore()
+
     def test_invalid_post_data(self):
         resp = self.app.post('/', {})
-        self.assertEqual(resp.body, b'400') # invalid post data
+        self.assertEqual(resp.body, b'400')  # invalid post data
+        self.assert_num_files_in_datastore(incoming=0, suspicious=0)
 
     def test_unpickling_error(self):
         broken_pickle = b'aaaaa'
         resp = self.upload(broken_pickle)
-        self.assertEqual(resp, b'208') # unpickle error
+        self.assertEqual(resp, b'208')  # unpickle error
+        self.assert_num_files_in_datastore(incoming=0, suspicious=0)
 
     def test_invalid_checksum(self):
         event_list = self.read_pickle(EVENTPY2)
         resp = self.upload(event_list, checksum=b'invalid')
-        self.assertEqual(resp, b'201') # input error
+        self.assertEqual(resp, b'201')  # input error
+        self.assert_num_files_in_datastore(incoming=0, suspicious=0)
 
     def test_invalid_station_id(self):
         event_list = self.read_pickle(EVENTPY2)
-        self.station_id = 0 # invalid station
+        self.station_id = 0  # invalid station
         resp = self.upload(event_list)
-        self.assertEqual(resp, b'206') # invalid station id
+        self.assertEqual(resp, b'206')  # invalid station id
+        self.assert_num_files_in_datastore(incoming=0, suspicious=0)
 
     def test_invalid_password(self):
         event_list = self.read_pickle(EVENTPY2)
         self.password = 'wrong_password'
         resp = self.upload(event_list)
-        self.assertEqual(resp, b'203') # wrong password
+        self.assertEqual(resp, b'203')  # wrong password
+        self.assert_num_files_in_datastore(incoming=0, suspicious=0)
 
     def test_put_py2_event(self):
         event_list = self.read_pickle(EVENTPY2)
@@ -75,8 +83,7 @@ class TestWsgiApp(unittest.TestCase):
 
         resp = self.upload(event_list)
         self.assertEqual(resp, b'100')
-
-        # verify the event in /incoming
+        self.assert_num_files_in_datastore(incoming=1)
 
     def test_put_py3_event(self):
         event_list = self.read_pickle(EVENTPY3)
@@ -88,15 +95,13 @@ class TestWsgiApp(unittest.TestCase):
 
         resp = self.upload(event_list)
         self.assertEqual(resp, b'100')
-
-        # verify the event in /incoming
+        self.assert_num_files_in_datastore(incoming=1)
 
     def test_put_suspicious_event(self):
         event_list = self.read_pickle(EVENTSUS)
         resp = self.upload(event_list)
         self.assertEqual(resp, b'100')
-
-        # verify the event in /suspicious
+        self.assert_num_files_in_datastore(suspicious=1)
 
     def upload(self, pickled_data, checksum=None):
         """POST. Return response"""
@@ -116,6 +121,25 @@ class TestWsgiApp(unittest.TestCase):
         with open(fn, 'rb') as f:
             pickle = f.read()
         return pickle
+
+    def files_in_folder(self, folder):
+        return glob.glob(folder+'/*')
+
+    def clean_datastore(self):
+        for folder in ['/incoming', '/tmp', '/suspicious']:
+            for fn in self.files_in_folder(DATASTORE_PATH+folder):
+                os.remove(fn)
+
+    def assert_num_files_in_datastore(self, incoming=None, suspicious=None):
+        self.assertEqual(len(self.files_in_folder(DATASTORE_PATH+'/tmp')), 0)
+        if incoming is not None:
+            self.assertEqual(
+                len(self.files_in_folder(DATASTORE_PATH+'/incoming')),
+                incoming)
+        if suspicious is not None:
+            self.assertEqual(
+                len(self.files_in_folder(DATASTORE_PATH+'/suspicious')),
+                suspicious)
 
 
 if __name__ == '__main__':
