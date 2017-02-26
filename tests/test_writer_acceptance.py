@@ -4,6 +4,7 @@ Acceptance tests for the writer
 python 3
 """
 import unittest
+import base64
 import configparser
 import shutil
 import sys
@@ -61,6 +62,13 @@ class TestWriterAcceptance(unittest.TestCase):
 
         blobs = self.read_table('blobs')
         self.assertEqual(len(blobs), 4)
+        # traces are sent base64 encoded and decoded by the writer
+        tr1 = blobs[0]
+        tr1_b64 = (b'eJxtkFkOAyEMQy/kD7KH+1+sBmZppUoZCI+MQ6wT+kT/5vfRxopD3rze'
+                   b'ygMvfojBFTkhllA3WDVCiIYjfSKDO+9yJKIKEbx3R+iAt8OtYM3PliQ1'
+                   b'i+qUVDFIJyQbQh1hP6HuTJBWgDwmpeAFD/hJEqwNRbCbsRnfsoj3LlA4'
+                   b'j5yAs/oO3THWHI8BJnsy+TLmEL4y7zXXL+Rr1WXSH2/GNu+KD4ouSr4=')
+        self.assertEqual(tr1, base64.decodebytes(tr1_b64))
 
     def test_singles_acceptance(self):
         self.writer.process_data(SIN_PY2)
@@ -74,7 +82,6 @@ class TestWriterAcceptance(unittest.TestCase):
 
         blobs = self.read_table('blobs')
         self.assertEqual(len(blobs), 0)
-        self.fail('Unpack blobs!')
 
     def test_weather_acceptance(self):
         self.writer.process_data(WTR_PY2)
