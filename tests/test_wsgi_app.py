@@ -17,7 +17,7 @@ DATASTORE_PATH = 'fake_datastore'
 STATION_ID = 99
 PASSWORD = 'fake_station'
 
-EVENTPY2 = 'test_data/incoming_http/py2event'
+EVENTPY2 = 'test_data/incoming_http/py2_s510_100events'
 EVENTPY3 = 'test_data/incoming_http/py3event'
 EVENTSUS = 'test_data/incoming_http/suspicious_event'
 
@@ -84,6 +84,7 @@ class TestWsgiApp(unittest.TestCase):
         resp = self.upload(event_list)
         self.assertEqual(resp, b'100')
         self.assert_num_files_in_datastore(incoming=1)
+        self.assert_num_events_written(100)
 
     def test_put_py3_event(self):
         event_list = self.read_pickle(EVENTPY3)
@@ -96,6 +97,7 @@ class TestWsgiApp(unittest.TestCase):
         resp = self.upload(event_list)
         self.assertEqual(resp, b'100')
         self.assert_num_files_in_datastore(incoming=1)
+        self.assert_num_events_written(1)
 
     def test_put_suspicious_event(self):
         event_list = self.read_pickle(EVENTSUS)
@@ -140,6 +142,13 @@ class TestWsgiApp(unittest.TestCase):
             self.assertEqual(
                 len(self.files_in_folder(DATASTORE_PATH+'/suspicious')),
                 suspicious)
+
+    def assert_num_events_written(self, number_of_events):
+        fn = self.files_in_folder(DATASTORE_PATH+'/incoming')[0]
+        with open(fn, 'rb') as f:
+            data = pickle.load(f)
+        written_event_list = data['event_list']
+        self.assertEqual(len(written_event_list), number_of_events)
 
 
 if __name__ == '__main__':
