@@ -1,3 +1,9 @@
+"""
+Acceptance tests for the datastore WSGI app
+
+python 3
+"""
+
 import unittest
 import functools
 import hashlib
@@ -34,7 +40,7 @@ def get_wsgi_app(wsgi_app=import_wsgi_app()):
     return wsgi_app
 
 
-class TestWsgiApp(unittest.TestCase):
+class TestWsgiAppAcceptance(unittest.TestCase):
 
     def setUp(self):
         self.station_id = STATION_ID
