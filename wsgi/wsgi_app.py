@@ -149,6 +149,7 @@ def store_data(station_id, cluster, event_list):
     tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
     if is_data_suspicious(event_list):
+        logger.debug('Date < 2013: event list marked as suspicious.')
         dir = os.path.join(config.get('General', 'data_dir'), 'suspicious')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
