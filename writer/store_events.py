@@ -146,6 +146,5 @@ def store_event_list(data_dir, station_id, cluster, event_list):
                 tb.seek(0)
                 logger.debug("Traceback: %s", tb.read())
 
-
     if datafile:
         datafile.close()
