@@ -279,7 +279,7 @@ def open_or_create_file(data_dir, date):
         # create dir and parent dirs with mode rwxr-xr-x
         os.makedirs(dir, 0755)
 
-    return tables.openFile(file, 'a')
+    return tables.open_file(file, 'a')
 
 
 def get_or_create_station_group(file, cluster, station_id):
@@ -293,10 +293,10 @@ def get_or_create_station_group(file, cluster, station_id):
     cluster = get_or_create_cluster_group(file, cluster)
     node_name = 'station_%d' % station_id
     try:
-        station = file.getNode(cluster, node_name)
+        station = file.get_node(cluster, node_name)
     except tables.NoSuchNodeError:
-        station = file.createGroup(cluster, node_name,
-                                   'HiSPARC station %d data' % station_id)
+        station = file.create_group(cluster, node_name,
+                                    'HiSPARC station %d data' % station_id)
         file.flush()
 
     return station
@@ -310,17 +310,17 @@ def get_or_create_cluster_group(file, cluster):
 
     """
     try:
-        hisparc = file.getNode('/', 'hisparc')
+        hisparc = file.get_node('/', 'hisparc')
     except tables.NoSuchNodeError:
-        hisparc = file.createGroup('/', 'hisparc', 'HiSPARC data')
+        hisparc = file.create_group('/', 'hisparc', 'HiSPARC data')
         file.flush()
 
     node_name = 'cluster_' + cluster.lower()
     try:
-        cluster = file.getNode(hisparc, node_name)
+        cluster = file.get_node(hisparc, node_name)
     except tables.NoSuchNodeError:
-        cluster = file.createGroup(hisparc, node_name,
-                                   'HiSPARC cluster %s data' % cluster)
+        cluster = file.create_group(hisparc, node_name,
+                                    'HiSPARC cluster %s data' % cluster)
         file.flush()
 
     return cluster
@@ -335,56 +335,58 @@ def get_or_create_node(file, cluster, node):
 
     """
     try:
-        node = file.getNode(cluster, node)
+        node = file.get_node(cluster, node)
     except tables.NoSuchNodeError:
         if node == 'events':
-            node = file.createTable(cluster, 'events', HisparcEvent,
-                                    'HiSPARC event data')
+            node = file.create_table(cluster, 'events', HisparcEvent,
+                                     'HiSPARC event data')
         elif node == 'errors':
-            node = file.createTable(cluster, 'errors', HisparcError,
-                                    'HiSPARC error messages')
+            node = file.create_table(cluster, 'errors', HisparcError,
+                                     'HiSPARC error messages')
         elif node == 'config':
-            node = file.createTable(cluster, 'config', HisparcConfiguration,
-                                    'HiSPARC configuration messages')
+            node = file.create_table(cluster, 'config', HisparcConfiguration,
+                                     'HiSPARC configuration messages')
         elif node == 'comparator':
-            node = file.createTable(cluster, 'comparator', HisparcComparator,
-                                    'HiSPARC comparator messages')
+            node = file.create_table(cluster, 'comparator', HisparcComparator,
+                                     'HiSPARC comparator messages')
         elif node == 'singles':
-            node = file.createTable(cluster, 'singles', HisparcSingle,
-                                    'HiSPARC single messages')
+            node = file.create_table(cluster, 'singles', HisparcSingle,
+                                     'HiSPARC single messages')
         elif node == 'satellites':
-            node = file.createTable(cluster, 'satellites', HisparcSatellite,
-                                    'HiSPARC satellite messages')
+            node = file.create_table(cluster, 'satellites', HisparcSatellite,
+                                     'HiSPARC satellite messages')
         elif node == 'blobs':
-            node = file.createVLArray(cluster, 'blobs', tables.VLStringAtom(),
-                                      'HiSPARC binary data')
+            node = file.create_vlarray(cluster, 'blobs', tables.VLStringAtom(),
+                                       'HiSPARC binary data')
         elif node == 'weather':
-            node = file.createTable(cluster, 'weather', WeatherEvent,
-                                    'HiSPARC weather data')
+            node = file.create_table(cluster, 'weather', WeatherEvent,
+                                     'HiSPARC weather data')
         elif node == 'weather_errors':
-            node = file.createTable(cluster, 'weather_errors', WeatherError,
-                                    'HiSPARC weather error messages')
+            node = file.create_table(cluster, 'weather_errors', WeatherError,
+                                     'HiSPARC weather error messages')
         elif node == 'weather_config':
-            node = file.createTable(cluster, 'weather_config', WeatherConfig,
-                                    'HiSPARC weather configuration messages')
+            node = file.create_table(cluster, 'weather_config', WeatherConfig,
+                                     'HiSPARC weather configuration messages')
         elif node == 'lightning':
-            node = file.createTable(cluster, 'lightning', LightningEvent,
-                                    'HiSPARC lightning data')
+            node = file.create_table(cluster, 'lightning', LightningEvent,
+                                     'HiSPARC lightning data')
         elif node == 'lightning_errors':
-            node = file.createTable(cluster, 'lightning_errors',
-                                    LightningError,
-                                    'HiSPARC lightning error messages')
+            node = file.create_table(cluster, 'lightning_errors',
+                                     LightningError,
+                                     'HiSPARC lightning error messages')
         elif node == 'lightning_config':
-            node = file.createTable(cluster, 'lightning_config',
-                                    LightningConfig,
-                                    'HiSPARC lightning configuration messages')
+            node = file.create_table(cluster, 'lightning_config',
+                                     LightningConfig,
+                                     'HiSPARC lightning configuration '
+                                     'messages')
         elif node == 'lightning_status':
-            node = file.createTable(cluster, 'lightning_status',
-                                    LightningStatus,
-                                    'HiSPARC lightning status messages')
+            node = file.create_table(cluster, 'lightning_status',
+                                     LightningStatus,
+                                     'HiSPARC lightning status messages')
         elif node == 'lightning_noise':
-            node = file.createTable(cluster, 'lightning_noise', LightningNoise,
-                                    'HiSPARC lightning noise messages')
+            node = file.create_table(cluster, 'lightning_noise',
+                                     LightningNoise,
+                                     'HiSPARC lightning noise messages')
         file.flush()
 
     return node
