@@ -6,6 +6,7 @@ python 3
 import unittest
 import base64
 import configparser
+import os
 import shutil
 import sys
 import tables
@@ -13,18 +14,33 @@ import tables
 from numpy import array
 from numpy.testing import assert_array_equal
 
+
+self_path = os.path.dirname(__file__)
+test_data_path = os.path.join(self_path, 'test_data/')
+
 # configuration:
-CONFIGFILE = 'test_data/config.ini'
-WRITER_PATH = '../writer'
-DATASTORE_PATH = 'fake_datastore'
+WRITER_PATH = os.path.join(self_path, '../writer')
+DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
+CONFIGFILE = os.path.join(test_data_path, 'config.ini')
+
+CONFIG = """
+[General]
+log=hisparc.log
+loglevel=debug
+station_list={datastore}/station_list.csv
+data_dir={datastore}
+""".format(datastore=DATASTORE_PATH)
+
+with open(CONFIGFILE, 'w') as f:
+    f.write(CONFIG)
 
 STATION_ID = 99
 CLUSTER = 'amsterdam'
 
-CIC_PY2 = 'test_data/incoming_writer/writer_py2_CIC'
-SIN_PY2 = 'test_data/incoming_writer/writer_py2_SIN'
-WTR_PY2 = 'test_data/incoming_writer/writer_py2_WTR'
-CFG_PY2 = 'test_data/incoming_writer/writer_py2_CFG'
+CIC_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_CIC')
+SIN_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_SIN')
+WTR_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_WTR')
+CFG_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_CFG')
 
 
 def import_writer():

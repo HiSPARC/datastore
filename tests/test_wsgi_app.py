@@ -15,17 +15,31 @@ import sys
 from webtest import TestApp
 
 
+self_path = os.path.dirname(__file__)
+test_data_path = os.path.join(self_path, 'test_data/')
+
 # configuration:
-CONFIGFILE = 'test_data/config.ini'
-WSGI_APP_PATH = '../wsgi'
-DATASTORE_PATH = 'fake_datastore'
+WSGI_APP_PATH = os.path.join(self_path, '../wsgi')
+DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
+CONFIGFILE = os.path.join(test_data_path, 'config.ini')
+
+CONFIG = """
+[General]
+log=hisparc.log
+loglevel=debug
+station_list={datastore}/station_list.csv
+data_dir={datastore}
+""".format(datastore=DATASTORE_PATH)
+
+with open(CONFIGFILE, 'w') as f:
+    f.write(CONFIG)
 
 STATION_ID = 99
 PASSWORD = 'fake_station'
 
-EVENTPY2 = 'test_data/incoming_http/py2_s510_100events'
-EVENTPY3 = 'test_data/incoming_http/py3event'
-EVENTSUS = 'test_data/incoming_http/suspicious_event'
+EVENTPY2 = os.path.join(test_data_path, 'incoming_http/py2_s510_100events')
+EVENTPY3 = os.path.join(test_data_path, 'incoming_http/py3event')
+EVENTSUS = os.path.join(test_data_path, 'incoming_http/suspicious_event')
 
 
 def import_wsgi_app():
