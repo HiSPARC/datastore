@@ -37,10 +37,8 @@ with open(CONFIGFILE, 'w') as f:
 STATION_ID = 99
 CLUSTER = 'amsterdam'
 
-CIC_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_CIC')
-SIN_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_SIN')
-WTR_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_WTR')
-CFG_PY2 = os.path.join(test_data_path, 'incoming_writer/writer_py2_CFG')
+UPLOAD_CODES = ['CIC', 'SIN', 'WTR', 'CFG']
+pickle_data_path = os.path.join(test_data_path, 'incoming_writer/')
 
 
 def import_writer():
@@ -57,19 +55,26 @@ def get_writer(writer=import_writer()):
     return writer
 
 
-class TestWriterAcceptance(unittest.TestCase):
+class TestWriterAcceptancePy2Pickles(unittest.TestCase):
+    """Acceptance tests for python 2 pickles"""
+    pickle_version = 'py2'
 
     def setUp(self):
         self.writer = get_writer()
         self.station_id = STATION_ID
         self.cluster = CLUSTER
         self.filename = '2017_2_26.h5'
+        self.pickle_filename = {}
+        for upload_code in UPLOAD_CODES:
+            self.pickle_filename[upload_code] = os.path.join(
+                pickle_data_path, 'writer_%s_%s' % (self.pickle_version,
+                                                    upload_code))
 
     def tearDown(self):
         self.clean_datastore()
 
     def test_event_acceptance(self):
-        self.writer.process_data(CIC_PY2)
+        self.writer.process_data(self.pickle_filename['CIC'])
 
         data = self.read_table('events')
         self.assertEqual(data['timestamp'], 1488093964)
@@ -87,7 +92,7 @@ class TestWriterAcceptance(unittest.TestCase):
         self.assertEqual(tr1, base64.decodebytes(tr1_b64))
 
     def test_singles_acceptance(self):
-        self.writer.process_data(SIN_PY2)
+        self.writer.process_data(self.pickle_filename['SIN'])
 
         data = self.read_table('singles')
         self.assertEqual(data['timestamp'], 1488094031)
@@ -100,7 +105,7 @@ class TestWriterAcceptance(unittest.TestCase):
         self.assertEqual(len(blobs), 0)
 
     def test_weather_acceptance(self):
-        self.writer.process_data(WTR_PY2)
+        self.writer.process_data(self.pickle_filename['WTR'])
 
         data = self.read_table('weather')
         self.assertEqual(data['timestamp'], 1488094084)
@@ -112,7 +117,7 @@ class TestWriterAcceptance(unittest.TestCase):
         self.assertEqual(len(blobs), 0)
 
     def test_config_acceptance(self):
-        self.writer.process_data(CFG_PY2)
+        self.writer.process_data(self.pickle_filename['CFG'])
         data = self.read_table('config')
         self.assertEqual(data['timestamp'], 1488125225)
         self.assertEqual(data['mas_ch1_thres_high'], 320)
@@ -140,6 +145,11 @@ class TestWriterAcceptance(unittest.TestCase):
 
     def clean_datastore(self):
         shutil.rmtree(DATASTORE_PATH+'/2017')
+
+
+class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):
+    """Acceptance tests for python 3 pickles"""
+    pickle_version = 'py3'
 
 
 if __name__ == '__main__':
