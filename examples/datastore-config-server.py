@@ -19,7 +19,9 @@ import os
 HASH = '/tmp/hash_datastore'
 DATASTORE_CFG = '/databases/frome/station_list.csv'
 CFG_URL = 'http://192.168.99.11/config/datastore'
+DATASTORE_XMLRPC_SERVER = ('192.168.99.13', 8001)
 RELOAD_PATH = '/tmp/uwsgi-reload.me'
+
 
 def reload_datastore():
     """Load datastore config and reload datastore, if necessary"""
@@ -55,7 +57,7 @@ if __name__ == '__main__':
         rpc_paths = ('/RPC2',)
 
     # Create server
-    server = SimpleXMLRPCServer(('192.168.99.13', 8001),
+    server = SimpleXMLRPCServer(DATASTORE_XMLRPC_SERVER,
                                 requestHandler=RequestHandler)
     server.register_introspection_functions()
 
