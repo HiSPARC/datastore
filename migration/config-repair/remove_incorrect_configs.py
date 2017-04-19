@@ -1,19 +1,13 @@
 import tables
-from shutil import copyfile
-
 
 def remove_configs(filename, cluster, stationnumber):
     """
-    Remove all but the first configuration row
+    Remove all but the first configuration row for a given cluster and stationnumber
     """
-    
-    copyfile(filename, filename+'_backup')
 
     with tables.open_file(filename, "a") as data:
-        config = data.get_node("/hisparc/cluster_"+cluster+"/station_"+str(stationnumber)+"/config")
-        print len(config)
-        config.remove_rows(1,len(config))
-
+        config = data.get_node("/hisparc/cluster_{cluster}/station_{stationnumber}/config".format(cluster=cluster, stationnumber=stationnumber))
+        config.remove_rows(1)
 
 
 if __name__ == "__main__":
