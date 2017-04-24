@@ -1,6 +1,9 @@
+import sys
 import calendar
 import base64
 import logging
+from io import StringIO
+import traceback
 
 import storage
 from upload_codes import eventtype_upload_codes
@@ -41,7 +44,7 @@ def store_event(datafile, cluster, station_id, event):
     nanoseconds = eventheader['nanoseconds']
     # make an extended timestamp, which is the number of nanoseconds since
     # epoch
-    ext_timestamp = timestamp * long(1e9) + nanoseconds
+    ext_timestamp = timestamp * int(1e9) + nanoseconds
     row['timestamp'] = timestamp
 
     if upload_codes['_has_ext_time']:
@@ -68,7 +71,10 @@ def store_event(datafile, cluster, station_id, event):
             # data should be stored inside the blob array, ...
             if uploadcode[:-1] == 'TR':
                 # traces are base64 encoded
-                value = base64.decodestring(value)
+                value = base64.decodebytes(value.encode('iso-8859-1'))
+            else:
+                # blobs are bytestrings
+                value = value.encode('iso-8859-1')
             blobs.append(value)
             # ... with a pointer stored in the event table
             value = len(blobs) - 1
@@ -133,6 +139,12 @@ def store_event_list(data_dir, station_id, cluster, event_list):
         except Exception as inst:
             logger.error("Cannot process event, discarding event (station: "
                          "%s), exception: %s" % (station_id, inst))
+            # get the full traceback. There must be a better way...
+            exc_info = sys.exc_info()
+            with StringIO() as tb:
+                traceback.print_exception(*exc_info, file=tb)
+                tb.seek(0)
+                logger.debug("Traceback: %s", tb.read())
 
     if datafile:
         datafile.close()

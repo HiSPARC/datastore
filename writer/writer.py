@@ -6,10 +6,10 @@
 """
 import logging
 import logging.handlers
-import ConfigParser
+import configparser
 import os
 import time
-import cPickle as pickle
+import pickle as pickle
 import shutil
 
 from store_events import store_event_list
@@ -28,7 +28,7 @@ formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
 def writer(configfile):
     # set up config
     global config
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(configfile)
 
     # set up logger
@@ -65,9 +65,26 @@ def writer(configfile):
 
 
 def process_data(file):
-    with open(file) as handle:
-        data = pickle.load(handle)
+    with open(file, 'rb') as handle:
+        try:
+            data = pickle.load(handle)
+        except UnicodeDecodeError:
+            logger.debug('Data seems to be pickled using python 2. Decoding.')
+            data = decode_object(pickle.load(handle, encoding='bytes'))
 
     logger.debug('Processing data for station %d' % data['station_id'])
     store_event_list(config.get('General', 'data_dir'),
                      data['station_id'], data['cluster'], data['event_list'])
+
+
+def decode_object(o):
+    """recursively decode all bytestrings in object"""
+
+    if type(o) is bytes:
+        return o.decode()
+    elif type(o) is dict:
+        return {decode_object(k): decode_object(v) for k, v in o.items()}
+    elif type(o) is list:
+        return [decode_object(obj) for obj in o]
+    else:
+        return o

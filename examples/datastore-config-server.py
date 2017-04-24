@@ -1,27 +1,32 @@
-!/usr/local/bin/python
+#!/usr/local/bin/python
 """ Simple XML-RPC Server to run on the datastore server.
+
     This daemon should be run on HiSPARC's datastore server.  It will
     handle the cluster layouts and station passwords.  When an update is
     necessary, it will reload the HTTP daemon.
+
     The basis for this code was ripped from the python SimpleXMLRPCServer
     library documentation and extended.
+
 """
-from SimpleXMLRPCServer import SimpleXMLRPCServer
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-import urllib2
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
+import urllib.request, urllib.error, urllib.parse
 import hashlib
 import subprocess
 import os
 
 HASH = '/tmp/hash_datastore'
 DATASTORE_CFG = '/databases/frome/station_list.csv'
-CFG_URL = '{{ datastore_config_url }}'
+CFG_URL = 'http://192.168.99.11/config/datastore'
+DATASTORE_XMLRPC_SERVER = ('192.168.99.13', 8001)
 RELOAD_PATH = '/tmp/uwsgi-reload.me'
+
 
 def reload_datastore():
     """Load datastore config and reload datastore, if necessary"""
 
-    datastore_cfg = urllib2.urlopen(CFG_URL).read()
+    datastore_cfg = urllib.request.urlopen(CFG_URL).read()
     new_hash = hashlib.sha1(datastore_cfg).hexdigest()
 
     try:
@@ -52,7 +57,7 @@ if __name__ == '__main__':
         rpc_paths = ('/RPC2',)
 
     # Create server
-    server = SimpleXMLRPCServer(('{{ datastore_host }}', {{ datastore_port }}),
+    server = SimpleXMLRPCServer(DATASTORE_XMLRPC_SERVER,
                                 requestHandler=RequestHandler)
     server.register_introspection_functions()
 
