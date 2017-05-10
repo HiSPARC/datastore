@@ -12,7 +12,7 @@ import time
 import pickle as pickle
 import shutil
 
-from store_events import store_event_list
+from writer.store_events import store_event_list
 
 LEVELS = {'debug': logging.DEBUG,
           'info': logging.INFO,

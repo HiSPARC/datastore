@@ -19,7 +19,7 @@ self_path = os.path.dirname(__file__)
 test_data_path = os.path.join(self_path, 'test_data/')
 
 # configuration:
-WRITER_PATH = os.path.join(self_path, '../writer')
+WRITER_PATH = os.path.join(self_path, '../')
 DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
 CONFIGFILE = os.path.join(test_data_path, 'config.ini')
 
@@ -44,7 +44,7 @@ pickle_data_path = os.path.join(test_data_path, 'incoming_writer/')
 def import_writer():
     """import the writer"""
     sys.path.append(WRITER_PATH)
-    import writer
+    from writer import writer
     writer.config = configparser.ConfigParser()
     writer.config.read(CONFIGFILE)
     return writer
