@@ -1,6 +1,6 @@
-""" HDF5 writer application
+""" datastore writer application
 
-    This module empties the station data `incoming' queue and writes the
+    This module empties the station data `incoming` queue and writes the
     data into HDF5 files using PyTables.
 
 """
@@ -26,6 +26,18 @@ formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
 
 
 def writer(configfile):
+    """hisparc datastore writer application
+
+    This script polls ``/datatore/frome/incoming`` for incoming data written
+    by the WSGI app. It then store the data into the raw datastore.
+
+    Configuration is read from the datastore configuation file (usually
+    `config.ini`):
+
+    .. include:: ../examples/config.ini
+       :literal:
+
+    """
     # set up config
     global config
     config = configparser.ConfigParser()
@@ -65,6 +77,7 @@ def writer(configfile):
 
 
 def process_data(file):
+    """Read data from a pickled object and store store in raw datastore"""
     with open(file, 'rb') as handle:
         try:
             data = pickle.load(handle)

@@ -1,10 +1,23 @@
 """
-Return codes.
+Return codes for the WSGI app.
+
 There are four types of return codes:
+
 1. OK (100)
 2. putEvent errors (20*)
+
+   - 201: invalid input: checksum of data does not match
+   - 203: wrong password
+   - 206: station unknown (check ``station-list.csv``)
+   - 208: unpickling error
+
 3. getEvent errors (30*)
-3. Internal server error (40*)
+
+   not used by WSGI app
+
+4. Internal server error (40*)
+
+   - 400: internal server error. Invalid post data.
 """
 
 RC_OK = b'100'  # OK, Everything went fine.

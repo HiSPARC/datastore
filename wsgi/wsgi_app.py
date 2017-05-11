@@ -28,8 +28,7 @@ formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
 def application(environ, start_response, configfile):
     """ The hisparc upload application
 
-    This handler is called by apache using mod_wsgi whenever someone
-    requests our URL.
+    This handler is called by uWSGI whenever someone requests our URL.
 
     First, we generate a dictionary of POSTed variables and try to read out the
     station_id, password, checksum and data. When we do a readline(), we
@@ -104,6 +103,15 @@ def do_init(configfile):
     This function will do one-time initialization.  By using global
     variables, we eliminate the need to reread configuration and passwords
     on every request.
+
+    Configuration is read from the datastore configuation file (usually
+    `config.ini`):
+
+    .. include:: ../examples/config.ini
+       :literal:
+
+    Station information is read from the `station_list` config variable.
+    (`station_list.csv` on frome)
 
     """
     # set up config
