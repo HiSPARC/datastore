@@ -1,13 +1,38 @@
-Raw datastore writer package
-============================
+datastore writer package
+========================
+
+.. automodule:: writer
+    :members:
+    :undoc-members:
 
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-   :includehidden:
+Writer application
+------------------
 
-   writer_app
-   storage
-   upload_codes
-   store_events
+.. automodule:: writer.writer_app
+    :members:
+    :undoc-members:
+
+Storage classes - raw datastore tables
+--------------------------------------
+
+.. automodule:: writer.storage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :imported-members:
+
+Store events module
+-------------------
+
+.. automodule:: writer.store_events
+   :members:
+   :undoc-members:
+
+Upload codes
+------------
+
+
+.. automodule:: writer.upload_codes
+   :members:
+   :undoc-members:

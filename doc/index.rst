@@ -10,8 +10,11 @@ Welcome to HiSPARC-datastore's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
    wsgi
    writer
+   xml-rpc-server
+
 
 
 Indices and tables

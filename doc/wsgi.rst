@@ -1,8 +1,10 @@
-wsgi package
-============
+datastore WSGI app package
+==========================
 
-Submodules
-----------
+.. automodule:: wsgi
+    :members:
+    :undoc-members:
+
 
 wsgi\.rcodes module
 -------------------
@@ -11,14 +13,10 @@ wsgi\.rcodes module
     :members:
     :undoc-members:
 
+
 wsgi\.wsgi\_app module
 ----------------------
 
 .. automodule:: wsgi.wsgi_app
-    :members:
-    :undoc-members:
-
-
-.. automodule:: wsgi
     :members:
     :undoc-members:
