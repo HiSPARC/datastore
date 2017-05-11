@@ -1,7 +1,8 @@
 """
 HiSPARC datastore WSGI application
 
-This WSGI app is served by uWSGI on frome and lives at ``http://frome.nikef.nl/hisparc/upload``.
+This WSGI app is served by uWSGI on frome and lives at
+``http://frome.nikef.nl/hisparc/upload``.
 
 example ``application.wsgi``:
 
