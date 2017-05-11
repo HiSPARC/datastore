@@ -9,9 +9,9 @@ import csv
 import os
 import shutil
 
-from rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
-                    RC_PE_INV_STATIONID, RC_PE_INV_INPUT,
-                    RC_PE_PICKLING_ERROR, RC_OK)
+from .rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
+                     RC_PE_INV_STATIONID, RC_PE_INV_INPUT,
+                     RC_PE_PICKLING_ERROR, RC_OK)
 
 
 LEVELS = {'debug': logging.DEBUG,
