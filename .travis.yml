@@ -19,11 +19,12 @@ before_install:
 install:
   - conda create --yes -n test_env python=$TRAVIS_PYTHON_VERSION pytables
   - source activate test_env
-  - pip install webtest flake8 coverage coveralls codecov
+  - pip install webtest flake8 coverage coveralls codecov sphinx
 
 script:
   - flake8 writer wsgi
   - coverage run -m unittest discover tests -v
+  - sphinx-build -anW doc doc/_build/html
 
 after_success:
   - coveralls
