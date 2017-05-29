@@ -14,13 +14,15 @@ The matching datastore file is: `expected_2017_3_2.h5`.
 
 It was copied from the real datastore using `ptrepack`:
 
-$ cp /databases/frome/2017/3/2017_3_2.h5 /data/hisparc/dat.h5
-$ prepack dat.h5:/hisparc/cluster_amsterdam/station_501 expected_2017_3_2.h5:/hisparc/cluster_amsterdam/station_99
+```
+$ scp hisparc@pique:/databases/frome/2017/3/2017_3_2.h5 .
+$ ptrepack 2017_3_2.h5:/hisparc/cluster_amsterdam/station_501 expected_2017_3_2.h5:/hisparc/cluster_amsterdam/station_99
+```
 
 Contents:
-
+```
 expected_2017_3_2.h5 (File) ''
-Last modif.: 'Mon Mar  6 09:02:25 2017'
+Last modif.: 'Mon May 29 11:15:04 2017'
 Object Tree:
 / (RootGroup) ''
 /hisparc (Group) 'HiSPARC data'
@@ -32,3 +34,4 @@ Object Tree:
 /hisparc/cluster_amsterdam/station_99/satellites (Table(24,)) 'HiSPARC satellite messages'
 /hisparc/cluster_amsterdam/station_99/singles (Table(84601,)) 'HiSPARC single messages'
 /hisparc/cluster_amsterdam/station_99/weather (Table(16822,)) 'HiSPARC weather data'
+```
