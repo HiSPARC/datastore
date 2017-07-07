@@ -6,7 +6,7 @@ See https://github.com/HiSPARC/datastore/issues/23
 
 For the datastore the remove_incorrect_configs.py script can be used.
 
-Note that the raw data is stored at /databases/frome (accesible via frome), that the ESD data is stored at /srv/publicdb/www/esd/ (accesible via pique) and that the publicdb database is located at *?*.
+Note that the raw data is stored at /databases/frome (accesible via frome), that the ESD data is stored at /srv/publicdb/www/esd/ (accesible via pique) and that the publicdb database is located at /var/run/postgresql.
 
 
 ## Datastore
@@ -22,6 +22,14 @@ Note that the raw data is stored at /databases/frome (accesible via frome), that
     # Edit the script to include all days with incorrect config data
     ipython remove_incorrect_configs.py
 
+The following configs were deleted from the data store (on 2017-jul-7):
+
+    sn 91, 2017-4-12
+    sn 4, 2017-4-15
+    sn 4, 2017-4-16
+    sn 508, 2017-4-18
+
+Backups of the original files are available at /data/hisparc/kaspervd/config-fix-data
 
 ## Publicdb
 
