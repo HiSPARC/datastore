@@ -2,9 +2,9 @@
 
 import sys
 
-sys.path.append('/var/www/wsgi-bin/datastore/writer')
+sys.path.append('/var/www/wsgi-bin/datastore/')
 
-import writer
+from writer import writer_app
 
 configfile = '/var/www/wsgi-bin/datastore/examples/config.ini'
-writer.writer(configfile)
+writer_app.writer(configfile)

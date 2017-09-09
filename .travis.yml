@@ -1,7 +1,4 @@
 language: python
-
-sudo: false
-
 python:
   - "3.6"
 
@@ -19,11 +16,24 @@ before_install:
 install:
   - conda create --yes -n test_env python=$TRAVIS_PYTHON_VERSION pytables
   - source activate test_env
-  - pip install webtest flake8 coverage coveralls codecov
+  - pip install webtest flake8 coverage coveralls codecov sphinx
 
 script:
-  - flake8 writer wsgi
-  - coverage run -m unittest discover tests -v
+  - make test
 
 after_success:
   - coveralls
+
+before_deploy:
+  - touch doc/_build/html/.nojekyll
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  local_dir: doc/_build/html
+  email: beheer@hisparc.nl
+  name: HiSPARC-Bot
+  on:
+    branch: master
+    python: 3.6

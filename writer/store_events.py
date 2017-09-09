@@ -5,8 +5,8 @@ import logging
 from io import StringIO
 import traceback
 
-import storage
-from upload_codes import eventtype_upload_codes
+from writer import storage
+from writer.upload_codes import eventtype_upload_codes
 
 logger = logging.getLogger('writer.store_events')
 

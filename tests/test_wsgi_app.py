@@ -19,7 +19,7 @@ self_path = os.path.dirname(__file__)
 test_data_path = os.path.join(self_path, 'test_data/')
 
 # configuration:
-WSGI_APP_PATH = os.path.join(self_path, '../wsgi')
+WSGI_APP_PATH = os.path.join(self_path, '../')
 DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
 CONFIGFILE = os.path.join(test_data_path, 'config.ini')
 
@@ -45,7 +45,7 @@ EVENTSUS = os.path.join(test_data_path, 'incoming_http/suspicious_event')
 def import_wsgi_app():
     """import the WSGI application"""
     sys.path.append(WSGI_APP_PATH)
-    import wsgi_app
+    from wsgi import wsgi_app
     return functools.partial(wsgi_app.application, configfile=CONFIGFILE)
 
 
