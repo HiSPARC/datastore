@@ -72,7 +72,7 @@ def writer(configfile):
                 path = os.path.join(partial_queue, entry)
                 process_data(path)
                 os.remove(path)
-    except:
+    except Exception:
         logger.exception('Exception occured, quitting.')
 
 
