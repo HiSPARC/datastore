@@ -23,6 +23,7 @@ script:
 
 after_success:
   - coveralls
+  - codecov
 
 before_deploy:
   - touch doc/_build/html/.nojekyll
