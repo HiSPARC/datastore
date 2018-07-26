@@ -4,9 +4,10 @@ test: unittests flaketest doctest
 
 unittests:
 	coverage run -m unittest discover tests -v
+	coverage report
 
 flaketest:
-	flake8 wsgi writer
+	flake8
 
 doctest:
 	sphinx-build -anW doc doc/_build/html
