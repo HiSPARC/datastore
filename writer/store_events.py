@@ -1,9 +1,10 @@
-import sys
-import calendar
 import base64
+import calendar
 import logging
-from io import StringIO
+import sys
 import traceback
+
+from io import StringIO
 
 from writer import storage
 from writer.upload_codes import eventtype_upload_codes

@@ -4,13 +4,13 @@
     data into HDF5 files using PyTables.
 
 """
+import configparser
 import logging
 import logging.handlers
-import configparser
 import os
-import time
 import pickle as pickle
 import shutil
+import time
 
 from writer.store_events import store_event_list
 

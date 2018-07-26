@@ -19,7 +19,6 @@ There are four types of return codes:
 
    - 400: internal server error. Invalid post data.
 """
-
 RC_OK = b'100'  # OK, Everything went fine.
 
 # putEvent

@@ -3,17 +3,17 @@ Acceptance tests for the writer
 
 python 3
 """
-import unittest
 import base64
 import configparser
 import os
 import shutil
 import sys
+import unittest
+
 import tables
 
 from numpy import array
 from numpy.testing import assert_array_equal
-
 
 self_path = os.path.dirname(__file__)
 test_data_path = os.path.join(self_path, 'test_data/')
@@ -133,7 +133,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
 
     def read_table(self, table):
         year, month, _ = self.filename.split('_')
-        path = DATASTORE_PATH+'/'+year+'/'+month+'/'+self.filename
+        path = DATASTORE_PATH + '/' + year + '/' + month + '/' + self.filename
         table_path = '/hisparc/cluster_%s/station_%s/%s' % (self.cluster,
                                                             self.station_id,
                                                             table)
@@ -144,7 +144,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         return data
 
     def clean_datastore(self):
-        shutil.rmtree(DATASTORE_PATH+'/2017')
+        shutil.rmtree(DATASTORE_PATH + '/2017')
 
 
 class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):

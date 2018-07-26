@@ -1,18 +1,15 @@
-import hashlib
-import urllib.parse
-import pickle as pickle
-import logging
-import logging.handlers
-import tempfile
 import configparser
 import csv
+import hashlib
+import logging
+import logging.handlers
 import os
+import pickle as pickle
 import shutil
+import tempfile
+import urllib.parse
 
-from .rcodes import (RC_ISE_INV_POSTDATA, RC_PE_INV_AUTHCODE,
-                     RC_PE_INV_STATIONID, RC_PE_INV_INPUT,
-                     RC_PE_PICKLING_ERROR, RC_OK)
-
+from . import rcodes
 
 LEVELS = {'debug': logging.DEBUG,
           'info': logging.INFO,
@@ -59,12 +56,12 @@ def application(environ, start_response, configfile):
         password = vars['password'][0]
     except (KeyError, EOFError):
         logger.debug("POST (vars) error")
-        return [RC_ISE_INV_POSTDATA]
+        return [rcodes.RC_ISE_INV_POSTDATA]
     else:
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
             logger.debug("Station %d: checksum mismatch" % station_id)
-            return [RC_PE_INV_INPUT]
+            return [rcodes.RC_PE_INV_INPUT]
         else:
             try:
                 try:
@@ -79,22 +76,22 @@ def application(environ, start_response, configfile):
                                      encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
                 logger.debug("Station %d: pickling error" % station_id)
-                return [RC_PE_PICKLING_ERROR]
+                return [rcodes.RC_PE_PICKLING_ERROR]
 
     try:
         cluster, station_password = station_list[station_id]
     except KeyError:
         logger.debug("Station %d is unknown" % station_id)
-        return [RC_PE_INV_STATIONID]
+        return [rcodes.RC_PE_INV_STATIONID]
 
     if station_password != password:
         logger.debug("Station %d: password mismatch: %s" % (station_id,
                                                             password))
-        return [RC_PE_INV_AUTHCODE]
+        return [rcodes.RC_PE_INV_AUTHCODE]
     else:
         store_data(station_id, cluster, event_list)
         logger.debug("Station %d: succesfully completed" % station_id)
-        return [RC_OK]
+        return [rcodes.RC_OK]
 
 
 def do_init(configfile):
