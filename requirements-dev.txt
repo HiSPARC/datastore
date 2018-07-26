@@ -1,0 +1,8 @@
+codecov
+coverage
+coveralls
+flake8
+flake8-isort
+pep8-naming
+sphinx
+webtest
