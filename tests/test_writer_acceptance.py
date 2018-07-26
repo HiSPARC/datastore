@@ -63,12 +63,11 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.writer_app = get_writer_app()
         self.station_id = STATION_ID
         self.cluster = CLUSTER
-        self.filename = '2017_2_26.h5'
+        self.filepath = '2017/2/2017_2_26.h5'
         self.pickle_filename = {}
         for upload_code in UPLOAD_CODES:
             self.pickle_filename[upload_code] = os.path.join(
-                pickle_data_path, 'writer_%s_%s' % (self.pickle_version,
-                                                    upload_code))
+                pickle_data_path, 'writer_%s_%s' % (self.pickle_version, upload_code))
 
     def tearDown(self):
         self.clean_datastore()
@@ -132,11 +131,8 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.assertEqual(blobs[1], b'Hardware: 0 FPGA: 0')
 
     def read_table(self, table):
-        year, month, _ = self.filename.split('_')
-        path = DATASTORE_PATH + '/' + year + '/' + month + '/' + self.filename
-        table_path = '/hisparc/cluster_%s/station_%s/%s' % (self.cluster,
-                                                            self.station_id,
-                                                            table)
+        path = os.path.join(DATASTORE_PATH, self.filepath)
+        table_path = '/hisparc/cluster_%s/station_%s/%s' % (self.cluster, self.station_id, table)
         with tables.open_file(path, 'r') as datafile:
             t = datafile.get_node(table_path)
             data = t.read()
@@ -144,7 +140,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         return data
 
     def clean_datastore(self):
-        shutil.rmtree(DATASTORE_PATH + '/2017')
+        shutil.rmtree(os.path.join(DATASTORE_PATH, '2017'))
 
 
 class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):

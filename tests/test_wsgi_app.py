@@ -143,23 +143,23 @@ class TestWsgiAppAcceptance(unittest.TestCase):
         return glob.glob(folder + '/*')
 
     def clean_datastore(self):
-        for folder in ['/incoming', '/tmp', '/suspicious']:
-            for fn in self.files_in_folder(DATASTORE_PATH + folder):
+        for folder in ['incoming', 'tmp', 'suspicious']:
+            for fn in self.files_in_folder(os.path.join(DATASTORE_PATH, folder)):
                 os.remove(fn)
 
     def assert_num_files_in_datastore(self, incoming=None, suspicious=None):
-        self.assertEqual(len(self.files_in_folder(DATASTORE_PATH + '/tmp')), 0)
+        self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'tmp'))), 0)
         if incoming is not None:
             self.assertEqual(
-                len(self.files_in_folder(DATASTORE_PATH + '/incoming')),
+                len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))),
                 incoming)
         if suspicious is not None:
             self.assertEqual(
-                len(self.files_in_folder(DATASTORE_PATH + '/suspicious')),
+                len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'suspicious'))),
                 suspicious)
 
     def assert_num_events_written(self, number_of_events):
-        fn = self.files_in_folder(DATASTORE_PATH + '/incoming')[0]
+        fn = self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))[0]
         with open(fn, 'rb') as f:
             data = pickle.load(f)
         written_event_list = data['event_list']
