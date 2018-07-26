@@ -16,7 +16,7 @@ before_install:
 install:
   - conda create --yes -n test_env python=$TRAVIS_PYTHON_VERSION pytables
   - source activate test_env
-  - pip install -r requirements-dev.txt
+  - make devinstall
 
 script:
   - make test
