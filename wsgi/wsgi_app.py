@@ -57,6 +57,17 @@ def application(environ, start_response, configfile):
     except (KeyError, EOFError):
         logger.debug("POST (vars) error")
         return [rcodes.RC_ISE_INV_POSTDATA]
+
+    try:
+        cluster, station_password = station_list[station_id]
+    except KeyError:
+        logger.debug("Station %d is unknown" % station_id)
+        return [rcodes.RC_PE_INV_STATIONID]
+
+    if station_password != password:
+        logger.debug("Station %d: password mismatch: %s" % (station_id,
+                                                            password))
+        return [rcodes.RC_PE_INV_AUTHCODE]
     else:
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
@@ -78,20 +89,9 @@ def application(environ, start_response, configfile):
                 logger.debug("Station %d: pickling error" % station_id)
                 return [rcodes.RC_PE_PICKLING_ERROR]
 
-    try:
-        cluster, station_password = station_list[station_id]
-    except KeyError:
-        logger.debug("Station %d is unknown" % station_id)
-        return [rcodes.RC_PE_INV_STATIONID]
-
-    if station_password != password:
-        logger.debug("Station %d: password mismatch: %s" % (station_id,
-                                                            password))
-        return [rcodes.RC_PE_INV_AUTHCODE]
-    else:
-        store_data(station_id, cluster, event_list)
-        logger.debug("Station %d: succesfully completed" % station_id)
-        return [rcodes.RC_OK]
+            store_data(station_id, cluster, event_list)
+            logger.debug("Station %d: succesfully completed" % station_id)
+            return [rcodes.RC_OK]
 
 
 def do_init(configfile):
