@@ -1,5 +1,6 @@
 import configparser
 import csv
+import datetime
 import hashlib
 import logging
 import logging.handlers
@@ -154,7 +155,7 @@ def store_data(station_id, cluster, event_list):
     tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
     if is_data_suspicious(event_list):
-        logger.debug('Date < 2013: event list marked as suspicious.')
+        logger.debug('Event list marked as suspicious.')
         dir = os.path.join(config.get('General', 'data_dir'), 'suspicious')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
@@ -174,9 +175,18 @@ def is_data_suspicious(event_list):
     the actual birth of the universe and the reweaving of past fates into
     current events has come to hunt us and our beloved data.
 
+    Apr 7, 2019 0:00 is the default time after a cold start without GPS signal.
+    The DAQ will happily send events even when no GPS signal has been
+    acquired (yet). Events with timestamp Apr 7, 2019 are most probably caused
+    by no or bad GPS signal. Such events must be eigenstates of suspiciousness.
+
     """
     for event in event_list:
         if event['header']['datetime'].year < 2013:
+            logger.debug('Date < 2013: Timestamp has high suspiciousness.')
+            return True
+        if event['header']['datetime'].date() == datetime.date(2019, 4, 7):
+            logger.debug('Date == Apr 7, 2019: No GPS signal?')
             return True
     return False
 
