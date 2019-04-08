@@ -1,0 +1,425 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>datastore writer package &#8212; HiSPARC-datastore 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/hisparc_style.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="XML-RPC-Server" href="xml-rpc-server.html" />
+    <link rel="prev" title="datastore WSGI app package" href="wsgi.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="xml-rpc-server.html" title="XML-RPC-Server"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="wsgi.html" title="datastore WSGI app package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-writer">
+<span id="datastore-writer-package"></span><h1>datastore writer package<a class="headerlink" href="#module-writer" title="Permalink to this headline">¶</a></h1>
+<p>HiSPARC datastore writer application</p>
+<p>This script polls <code class="docutils literal notranslate"><span class="pre">/datatore/frome/incoming</span></code> for incoming data written
+by the WSGI app. It then writes the data into the raw datastore.</p>
+<p>example <code class="docutils literal notranslate"><span class="pre">writer_app.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Wrapper for the writer application&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;/var/www/wsgi-bin/datastore/&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">writer</span> <span class="k">import</span> <span class="n">writer_app</span>
+
+<span class="n">configfile</span> <span class="o">=</span> <span class="s1">&#39;/var/www/wsgi-bin/datastore/examples/config.ini&#39;</span>
+<span class="n">writer_app</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>configuration is read from a configuation file, shared between the WSGI app
+and the writer usually <cite>config.ini</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">General</span><span class="p">]</span>
+<span class="n">log</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">hisparc</span><span class="o">.</span><span class="n">log</span>
+<span class="n">loglevel</span><span class="o">=</span><span class="n">debug</span>
+<span class="n">station_list</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">station_list</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">data_dir</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">datastore</span>
+
+<span class="p">[</span><span class="n">Writer</span><span class="p">]</span>
+<span class="n">sleep</span><span class="o">=</span><span class="mi">5</span>
+</pre></div>
+</div>
+<div class="section" id="module-writer.writer_app">
+<span id="writer-application"></span><h2>Writer application<a class="headerlink" href="#module-writer.writer_app" title="Permalink to this headline">¶</a></h2>
+<p>datastore writer application</p>
+<p>This module empties the station data <cite>incoming</cite> queue and writes the
+data into HDF5 files using PyTables.</p>
+<dl class="function">
+<dt id="writer.writer_app.decode_object">
+<code class="descclassname">writer.writer_app.</code><code class="descname">decode_object</code><span class="sig-paren">(</span><em>o</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/writer_app.html#decode_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.writer_app.decode_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>recursively decode all bytestrings in object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.writer_app.process_data">
+<code class="descclassname">writer.writer_app.</code><code class="descname">process_data</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/writer_app.html#process_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.writer_app.process_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from a pickled object and store store in raw datastore</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.writer_app.writer">
+<code class="descclassname">writer.writer_app.</code><code class="descname">writer</code><span class="sig-paren">(</span><em>configfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/writer_app.html#writer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.writer_app.writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>hisparc datastore writer application</p>
+<p>This script polls <code class="docutils literal notranslate"><span class="pre">/datatore/frome/incoming</span></code> for incoming data written
+by the WSGI app. It then store the data into the raw datastore.</p>
+<p>Configuration is read from the datastore configuation file (usually
+<cite>config.ini</cite>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">General</span><span class="p">]</span>
+<span class="n">log</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">hisparc</span><span class="o">.</span><span class="n">log</span>
+<span class="n">loglevel</span><span class="o">=</span><span class="n">debug</span>
+<span class="n">station_list</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">station_list</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">data_dir</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">datastore</span>
+
+<span class="p">[</span><span class="n">Writer</span><span class="p">]</span>
+<span class="n">sleep</span><span class="o">=</span><span class="mi">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-writer.storage">
+<span id="storage-classes-raw-datastore-tables"></span><h2>Storage classes - raw datastore tables<a class="headerlink" href="#module-writer.storage" title="Permalink to this headline">¶</a></h2>
+<p>Storage docstrings</p>
+<dl class="class">
+<dt id="writer.storage.HisparcComparator">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">HisparcComparator</code><a class="headerlink" href="#writer.storage.HisparcComparator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.HisparcComparator.columns">
+<code class="descname">columns</code><em class="property"> = {'comparator': UInt8Col(shape=(), dflt=0, pos=5), 'count': UInt16Col(shape=(), dflt=0, pos=6), 'device': UInt8Col(shape=(), dflt=0, pos=4), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'ext_timestamp': UInt64Col(shape=(), dflt=0, pos=3), 'nanoseconds': UInt32Col(shape=(), dflt=0, pos=2), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.HisparcComparator.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.HisparcConfiguration">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">HisparcConfiguration</code><a class="headerlink" href="#writer.storage.HisparcConfiguration" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.HisparcConfiguration.columns">
+<code class="descname">columns</code><em class="property"> = {'buffer': Int32Col(shape=(), dflt=-1, pos=20), 'coinctime': Float64Col(shape=(), dflt=0.0, pos=12), 'delay_check': Float64Col(shape=(), dflt=0.0, pos=23), 'delay_error': Float64Col(shape=(), dflt=0.0, pos=24), 'delay_screen': Float64Col(shape=(), dflt=0.0, pos=22), 'detnum': UInt16Col(shape=(), dflt=0, pos=14), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'gps_altitude': Float64Col(shape=(), dflt=0.0, pos=4), 'gps_latitude': Float64Col(shape=(), dflt=0.0, pos=2), 'gps_longitude': Float64Col(shape=(), dflt=0.0, pos=3), 'mas_ch1_adc_gain': Float64Col(shape=(), dflt=0.0, pos=49), 'mas_ch1_adc_offset': Float64Col(shape=(), dflt=0.0, pos=50), 'mas_ch1_comp_gain': Float64Col(shape=(), dflt=0.0, pos=53), 'mas_ch1_comp_offset': Float64Col(shape=(), dflt=0.0, pos=54), 'mas_ch1_current': Float64Col(shape=(), dflt=0.0, pos=33), 'mas_ch1_gain_neg': UInt8Col(shape=(), dflt=0, pos=40), 'mas_ch1_gain_pos': UInt8Col(shape=(), dflt=0, pos=39), 'mas_ch1_inttime': Float64Col(shape=(), dflt=0.0, pos=29), 'mas_ch1_offset_neg': UInt8Col(shape=(), dflt=0, pos=44), 'mas_ch1_offset_pos': UInt8Col(shape=(), dflt=0, pos=43), 'mas_ch1_thres_high': Float64Col(shape=(), dflt=0.0, pos=26), 'mas_ch1_thres_low': Float64Col(shape=(), dflt=0.0, pos=25), 'mas_ch1_voltage': Float64Col(shape=(), dflt=0.0, pos=31), 'mas_ch2_adc_gain': Float64Col(shape=(), dflt=0.0, pos=51), 'mas_ch2_adc_offset': Float64Col(shape=(), dflt=0.0, pos=52), 'mas_ch2_comp_gain': Float64Col(shape=(), dflt=0.0, pos=55), 'mas_ch2_comp_offset': Float64Col(shape=(), dflt=0.0, pos=56), 'mas_ch2_current': Float64Col(shape=(), dflt=0.0, pos=34), 'mas_ch2_gain_neg': UInt8Col(shape=(), dflt=0, pos=42), 'mas_ch2_gain_pos': UInt8Col(shape=(), dflt=0, pos=41), 'mas_ch2_inttime': Float64Col(shape=(), dflt=0.0, pos=30), 'mas_ch2_offset_neg': UInt8Col(shape=(), dflt=0, pos=46), 'mas_ch2_offset_pos': UInt8Col(shape=(), dflt=0, pos=45), 'mas_ch2_thres_high': Float64Col(shape=(), dflt=0.0, pos=28), 'mas_ch2_thres_low': Float64Col(shape=(), dflt=0.0, pos=27), 'mas_ch2_voltage': Float64Col(shape=(), dflt=0.0, pos=32), 'mas_common_offset': UInt8Col(shape=(), dflt=0, pos=47), 'mas_comp_thres_high': Float64Col(shape=(), dflt=0.0, pos=36), 'mas_comp_thres_low': Float64Col(shape=(), dflt=0.0, pos=35), 'mas_internal_voltage': UInt8Col(shape=(), dflt=0, pos=48), 'mas_max_voltage': Float64Col(shape=(), dflt=0.0, pos=37), 'mas_reset': BoolCol(shape=(), dflt=False, pos=38), 'mas_version': Int32Col(shape=(), dflt=-1, pos=5), 'password': Int32Col(shape=(), dflt=-1, pos=15), 'postcoinctime': Float64Col(shape=(), dflt=0.0, pos=13), 'precoinctime': Float64Col(shape=(), dflt=0.0, pos=11), 'reduce_data': BoolCol(shape=(), dflt=False, pos=19), 'slv_ch1_adc_gain': Float64Col(shape=(), dflt=0.0, pos=81), 'slv_ch1_adc_offset': Float64Col(shape=(), dflt=0.0, pos=82), 'slv_ch1_comp_gain': Float64Col(shape=(), dflt=0.0, pos=85), 'slv_ch1_comp_offset': Float64Col(shape=(), dflt=0.0, pos=86), 'slv_ch1_current': Float64Col(shape=(), dflt=0.0, pos=65), 'slv_ch1_gain_neg': UInt8Col(shape=(), dflt=0, pos=72), 'slv_ch1_gain_pos': UInt8Col(shape=(), dflt=0, pos=71), 'slv_ch1_inttime': Float64Col(shape=(), dflt=0.0, pos=61), 'slv_ch1_offset_neg': UInt8Col(shape=(), dflt=0, pos=76), 'slv_ch1_offset_pos': UInt8Col(shape=(), dflt=0, pos=75), 'slv_ch1_thres_high': Float64Col(shape=(), dflt=0.0, pos=58), 'slv_ch1_thres_low': Float64Col(shape=(), dflt=0.0, pos=57), 'slv_ch1_voltage': Float64Col(shape=(), dflt=0.0, pos=63), 'slv_ch2_adc_gain': Float64Col(shape=(), dflt=0.0, pos=83), 'slv_ch2_adc_offset': Float64Col(shape=(), dflt=0.0, pos=84), 'slv_ch2_comp_gain': Float64Col(shape=(), dflt=0.0, pos=87), 'slv_ch2_comp_offset': Float64Col(shape=(), dflt=0.0, pos=88), 'slv_ch2_current': Float64Col(shape=(), dflt=0.0, pos=66), 'slv_ch2_gain_neg': UInt8Col(shape=(), dflt=0, pos=74), 'slv_ch2_gain_pos': UInt8Col(shape=(), dflt=0, pos=73), 'slv_ch2_inttime': Float64Col(shape=(), dflt=0.0, pos=62), 'slv_ch2_offset_neg': UInt8Col(shape=(), dflt=0, pos=78), 'slv_ch2_offset_pos': UInt8Col(shape=(), dflt=0, pos=77), 'slv_ch2_thres_high': Float64Col(shape=(), dflt=0.0, pos=60), 'slv_ch2_thres_low': Float64Col(shape=(), dflt=0.0, pos=59), 'slv_ch2_voltage': Float64Col(shape=(), dflt=0.0, pos=64), 'slv_common_offset': UInt8Col(shape=(), dflt=0, pos=79), 'slv_comp_thres_high': Float64Col(shape=(), dflt=0.0, pos=68), 'slv_comp_thres_low': Float64Col(shape=(), dflt=0.0, pos=67), 'slv_internal_voltage': UInt8Col(shape=(), dflt=0, pos=80), 'slv_max_voltage': Float64Col(shape=(), dflt=0.0, pos=69), 'slv_reset': BoolCol(shape=(), dflt=False, pos=70), 'slv_version': Int32Col(shape=(), dflt=-1, pos=6), 'spare_bytes': UInt8Col(shape=(), dflt=0, pos=16), 'startmode': BoolCol(shape=(), dflt=False, pos=21), 'timestamp': Time32Col(shape=(), dflt=0, pos=1), 'trig_and_or': BoolCol(shape=(), dflt=False, pos=10), 'trig_external': UInt32Col(shape=(), dflt=0, pos=9), 'trig_high_signals': UInt32Col(shape=(), dflt=0, pos=8), 'trig_low_signals': UInt32Col(shape=(), dflt=0, pos=7), 'use_filter': BoolCol(shape=(), dflt=False, pos=17), 'use_filter_threshold': BoolCol(shape=(), dflt=False, pos=18)}</em><a class="headerlink" href="#writer.storage.HisparcConfiguration.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.HisparcError">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">HisparcError</code><a class="headerlink" href="#writer.storage.HisparcError" title="Permalink to this definition">¶</a></dt>
+<dd><p>HiSPARC Error messages tables</p>
+<dl class="attribute">
+<dt id="writer.storage.HisparcError.columns">
+<code class="descname">columns</code><em class="property"> = {'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'messages': Int32Col(shape=(), dflt=-1, pos=2), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.HisparcError.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.HisparcEvent">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">HisparcEvent</code><a class="headerlink" href="#writer.storage.HisparcEvent" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.HisparcEvent.columns">
+<code class="descname">columns</code><em class="property"> = {'baseline': Int16Col(shape=(4,), dflt=-1, pos=6), 'data_reduction': BoolCol(shape=(), dflt=False, pos=4), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'event_rate': Float32Col(shape=(), dflt=0.0, pos=12), 'ext_timestamp': UInt64Col(shape=(), dflt=0, pos=3), 'integrals': Int32Col(shape=(4,), dflt=-1, pos=10), 'n_peaks': Int16Col(shape=(4,), dflt=-1, pos=8), 'nanoseconds': UInt32Col(shape=(), dflt=0, pos=2), 'pulseheights': Int16Col(shape=(4,), dflt=-1, pos=9), 'std_dev': Int16Col(shape=(4,), dflt=-1, pos=7), 'timestamp': Time32Col(shape=(), dflt=0, pos=1), 'traces': Int32Col(shape=(4,), dflt=-1, pos=11), 'trigger_pattern': UInt32Col(shape=(), dflt=0, pos=5)}</em><a class="headerlink" href="#writer.storage.HisparcEvent.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.HisparcSatellite">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">HisparcSatellite</code><a class="headerlink" href="#writer.storage.HisparcSatellite" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.HisparcSatellite.columns">
+<code class="descname">columns</code><em class="property"> = {'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'max_n': UInt16Col(shape=(), dflt=0, pos=4), 'max_signal': UInt16Col(shape=(), dflt=0, pos=7), 'mean_n': Float32Col(shape=(), dflt=0.0, pos=3), 'mean_signal': Float32Col(shape=(), dflt=0.0, pos=6), 'min_n': UInt16Col(shape=(), dflt=0, pos=2), 'min_signal': UInt16Col(shape=(), dflt=0, pos=5), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.HisparcSatellite.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.HisparcSingle">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">HisparcSingle</code><a class="headerlink" href="#writer.storage.HisparcSingle" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.HisparcSingle.columns">
+<code class="descname">columns</code><em class="property"> = {'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'mas_ch1_high': Int32Col(shape=(), dflt=-1, pos=3), 'mas_ch1_low': Int32Col(shape=(), dflt=-1, pos=2), 'mas_ch2_high': Int32Col(shape=(), dflt=-1, pos=5), 'mas_ch2_low': Int32Col(shape=(), dflt=-1, pos=4), 'slv_ch1_high': Int32Col(shape=(), dflt=-1, pos=7), 'slv_ch1_low': Int32Col(shape=(), dflt=-1, pos=6), 'slv_ch2_high': Int32Col(shape=(), dflt=-1, pos=9), 'slv_ch2_low': Int32Col(shape=(), dflt=-1, pos=8), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.HisparcSingle.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.LightningConfig">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">LightningConfig</code><a class="headerlink" href="#writer.storage.LightningConfig" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.LightningConfig.columns">
+<code class="descname">columns</code><em class="property"> = {'altitude': Float64Col(shape=(), dflt=0.0, pos=10), 'angle_correction': Float32Col(shape=(), dflt=0.0, pos=16), 'baud_rate': Int16Col(shape=(), dflt=0, pos=3), 'close_alarm_distance': Int32Col(shape=(), dflt=0, pos=12), 'com_port': UInt8Col(shape=(), dflt=0, pos=2), 'daq_mode': BoolCol(shape=(), dflt=False, pos=7), 'database_name': Int32Col(shape=(), dflt=-1, pos=5), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'help_url': Int32Col(shape=(), dflt=-1, pos=6), 'latitude': Float64Col(shape=(), dflt=0.0, pos=8), 'longitude': Float64Col(shape=(), dflt=0.0, pos=9), 'minimum_gps_speed': Int32Col(shape=(), dflt=0, pos=15), 'noise_beep': BoolCol(shape=(), dflt=False, pos=14), 'severe_alarm_distance': Int32Col(shape=(), dflt=0, pos=13), 'squelch_seting': Int32Col(shape=(), dflt=0, pos=11), 'station_id': UInt32Col(shape=(), dflt=0, pos=4), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.LightningConfig.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.LightningError">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">LightningError</code><a class="headerlink" href="#writer.storage.LightningError" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.LightningError.columns">
+<code class="descname">columns</code><em class="property"> = {'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'messages': Int32Col(shape=(), dflt=-1, pos=2), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.LightningError.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.LightningEvent">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">LightningEvent</code><a class="headerlink" href="#writer.storage.LightningEvent" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.LightningEvent.columns">
+<code class="descname">columns</code><em class="property"> = {'corr_angle': Float32Col(shape=(), dflt=0.0, pos=5), 'corr_distance': Int16Col(shape=(), dflt=0, pos=2), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'timestamp': Time32Col(shape=(), dflt=0, pos=1), 'uncorr_angle': Float32Col(shape=(), dflt=0.0, pos=4), 'uncorr_distance': Int16Col(shape=(), dflt=0, pos=3)}</em><a class="headerlink" href="#writer.storage.LightningEvent.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.LightningNoise">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">LightningNoise</code><a class="headerlink" href="#writer.storage.LightningNoise" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.LightningNoise.columns">
+<code class="descname">columns</code><em class="property"> = {'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.LightningNoise.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.LightningStatus">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">LightningStatus</code><a class="headerlink" href="#writer.storage.LightningStatus" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.LightningStatus.columns">
+<code class="descname">columns</code><em class="property"> = {'close_alarm': BoolCol(shape=(), dflt=False, pos=4), 'close_rate': Int16Col(shape=(), dflt=0, pos=2), 'current_heading': Float32Col(shape=(), dflt=0.0, pos=6), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'sever_alarm': BoolCol(shape=(), dflt=False, pos=5), 'timestamp': Time32Col(shape=(), dflt=0, pos=1), 'total_rate': Int16Col(shape=(), dflt=0, pos=3)}</em><a class="headerlink" href="#writer.storage.LightningStatus.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.WeatherConfig">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">WeatherConfig</code><a class="headerlink" href="#writer.storage.WeatherConfig" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.WeatherConfig.columns">
+<code class="descname">columns</code><em class="property"> = {'altitude': Float64Col(shape=(), dflt=0.0, pos=10), 'barometer': BoolCol(shape=(), dflt=False, pos=15), 'baud_rate': Int16Col(shape=(), dflt=0, pos=3), 'com_port': UInt8Col(shape=(), dflt=0, pos=2), 'daq_mode': BoolCol(shape=(), dflt=False, pos=7), 'database_name': Int32Col(shape=(), dflt=-1, pos=5), 'dew_point': BoolCol(shape=(), dflt=False, pos=23), 'evapotranspiration': BoolCol(shape=(), dflt=False, pos=20), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'heat_index': BoolCol(shape=(), dflt=False, pos=22), 'help_url': Int32Col(shape=(), dflt=-1, pos=6), 'humidity_inside': BoolCol(shape=(), dflt=False, pos=13), 'humidity_outside': BoolCol(shape=(), dflt=False, pos=14), 'latitude': Float64Col(shape=(), dflt=0.0, pos=8), 'longitude': Float64Col(shape=(), dflt=0.0, pos=9), 'offset_bar_sea_level': Float32Col(shape=(), dflt=0.0, pos=31), 'offset_inside_humidity': Int16Col(shape=(), dflt=0, pos=27), 'offset_inside_temperature': Float32Col(shape=(), dflt=0.0, pos=25), 'offset_outside_humidity': Int16Col(shape=(), dflt=0, pos=28), 'offset_outside_temperature': Float32Col(shape=(), dflt=0.0, pos=26), 'offset_station_altitude': Float32Col(shape=(), dflt=0.0, pos=30), 'offset_wind_direction': Int16Col(shape=(), dflt=0, pos=29), 'rain_rate': BoolCol(shape=(), dflt=False, pos=21), 'solar_radiation': BoolCol(shape=(), dflt=False, pos=18), 'station_id': UInt32Col(shape=(), dflt=0, pos=4), 'temperature_inside': BoolCol(shape=(), dflt=False, pos=11), 'temperature_outside': BoolCol(shape=(), dflt=False, pos=12), 'timestamp': Time32Col(shape=(), dflt=0, pos=1), 'uv_index': BoolCol(shape=(), dflt=False, pos=19), 'wind_chill': BoolCol(shape=(), dflt=False, pos=24), 'wind_direction': BoolCol(shape=(), dflt=False, pos=16), 'wind_speed': BoolCol(shape=(), dflt=False, pos=17)}</em><a class="headerlink" href="#writer.storage.WeatherConfig.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.WeatherError">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">WeatherError</code><a class="headerlink" href="#writer.storage.WeatherError" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.WeatherError.columns">
+<code class="descname">columns</code><em class="property"> = {'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'messages': Int32Col(shape=(), dflt=-1, pos=2), 'timestamp': Time32Col(shape=(), dflt=0, pos=1)}</em><a class="headerlink" href="#writer.storage.WeatherError.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="writer.storage.WeatherEvent">
+<em class="property">class </em><code class="descclassname">writer.storage.</code><code class="descname">WeatherEvent</code><a class="headerlink" href="#writer.storage.WeatherEvent" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="writer.storage.WeatherEvent.columns">
+<code class="descname">columns</code><em class="property"> = {'barometer': Float32Col(shape=(), dflt=0.0, pos=6), 'dew_point': Float32Col(shape=(), dflt=0.0, pos=14), 'evapotranspiration': Float32Col(shape=(), dflt=0.0, pos=11), 'event_id': UInt32Col(shape=(), dflt=0, pos=0), 'heat_index': Int16Col(shape=(), dflt=0, pos=13), 'humidity_inside': Int16Col(shape=(), dflt=0, pos=4), 'humidity_outside': Int16Col(shape=(), dflt=0, pos=5), 'rain_rate': Float32Col(shape=(), dflt=0.0, pos=12), 'solar_rad': Int16Col(shape=(), dflt=0, pos=9), 'temp_inside': Float32Col(shape=(), dflt=0.0, pos=2), 'temp_outside': Float32Col(shape=(), dflt=0.0, pos=3), 'timestamp': Time32Col(shape=(), dflt=0, pos=1), 'uv': Int16Col(shape=(), dflt=0, pos=10), 'wind_chill': Float32Col(shape=(), dflt=0.0, pos=15), 'wind_dir': Int16Col(shape=(), dflt=0, pos=7), 'wind_speed': Int16Col(shape=(), dflt=0, pos=8)}</em><a class="headerlink" href="#writer.storage.WeatherEvent.columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.storage.get_or_create_cluster_group">
+<code class="descclassname">writer.storage.</code><code class="descname">get_or_create_cluster_group</code><span class="sig-paren">(</span><em>file</em>, <em>cluster</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#get_or_create_cluster_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.storage.get_or_create_cluster_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an existing cluster group or create a new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – the PyTables data file</p></li>
+<li><p><strong>cluster</strong> – the name of the cluster</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.storage.get_or_create_node">
+<code class="descclassname">writer.storage.</code><code class="descname">get_or_create_node</code><span class="sig-paren">(</span><em>file</em>, <em>cluster</em>, <em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#get_or_create_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.storage.get_or_create_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an existing node or create a new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – the PyTables data file</p></li>
+<li><p><strong>cluster</strong> – the parent (cluster) node</p></li>
+<li><p><strong>node</strong> – the node (e.g. events, blobs)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.storage.get_or_create_station_group">
+<code class="descclassname">writer.storage.</code><code class="descname">get_or_create_station_group</code><span class="sig-paren">(</span><em>file</em>, <em>cluster</em>, <em>station_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#get_or_create_station_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.storage.get_or_create_station_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an existing station group or create a new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – the PyTables data file</p></li>
+<li><p><strong>cluster</strong> – the name of the cluster</p></li>
+<li><p><strong>station_id</strong> – the station number</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.storage.open_or_create_file">
+<code class="descclassname">writer.storage.</code><code class="descname">open_or_create_file</code><span class="sig-paren">(</span><em>data_dir</em>, <em>date</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#open_or_create_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.storage.open_or_create_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open an existing file or create a new one</p>
+<p>This function opens an existing PyTables file according to the event
+date.  If the file does not yet exist, a new one is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_dir</strong> – the directory containing all data files</p></li>
+<li><p><strong>date</strong> – the event date</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-writer.store_events">
+<span id="store-events-module"></span><h2>Store events module<a class="headerlink" href="#module-writer.store_events" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="writer.store_events.data_is_blob">
+<code class="descclassname">writer.store_events.</code><code class="descname">data_is_blob</code><span class="sig-paren">(</span><em>uploadcode</em>, <em>blob_types</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/store_events.html#data_is_blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.store_events.data_is_blob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if data is a variable length binary value (blob)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.store_events.store_event">
+<code class="descclassname">writer.store_events.</code><code class="descname">store_event</code><span class="sig-paren">(</span><em>datafile</em>, <em>cluster</em>, <em>station_id</em>, <em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/store_events.html#store_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.store_events.store_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores an event in the h5 filesystem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datafile</strong> – the h5 data file</p></li>
+<li><p><strong>cluster</strong> – the name of the cluster to which the station belongs</p></li>
+<li><p><strong>station_id</strong> – the id of the station this event belongs to</p></li>
+<li><p><strong>event</strong> – the event to store</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="writer.store_events.store_event_list">
+<code class="descclassname">writer.store_events.</code><code class="descname">store_event_list</code><span class="sig-paren">(</span><em>data_dir</em>, <em>station_id</em>, <em>cluster</em>, <em>event_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/store_events.html#store_event_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#writer.store_events.store_event_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a list of events</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-writer.upload_codes">
+<span id="upload-codes"></span><h2>Upload codes<a class="headerlink" href="#module-writer.upload_codes" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/header.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">datastore writer package</a><ul>
+<li><a class="reference internal" href="#module-writer.writer_app">Writer application</a></li>
+<li><a class="reference internal" href="#module-writer.storage">Storage classes - raw datastore tables</a></li>
+<li><a class="reference internal" href="#module-writer.store_events">Store events module</a></li>
+<li><a class="reference internal" href="#module-writer.upload_codes">Upload codes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="wsgi.html"
+                        title="previous chapter">datastore WSGI app package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="xml-rpc-server.html"
+                        title="next chapter">XML-RPC-Server</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/writer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="xml-rpc-server.html" title="XML-RPC-Server"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="wsgi.html" title="datastore WSGI app package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, David Fokkema, Arne de Laat, Tom Kooij.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.0.
+    </div>
+  </body>
+</html>
