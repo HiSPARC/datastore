@@ -1,6 +1,6 @@
 HisparcSingle ('/singles' in the datastore ) colomns where `tables.UInt16Col`
 before HiSPARC/datastore@dec64079 (merged feb 12, 2017, after this migration).
-For stations without a slave (two detector stations) the slave columns where
+For stations without a secondary (two detector stations) the secondary columns where
 set to all zero, instead of all `-1` to represent 'missing sensor'.
 
 In this migration all datastore '/singles' tables where converted to the new
@@ -44,8 +44,8 @@ cluster, but the affected data is test data.
 
 The error message states that there was no information about the station in
 the API. As a result, the station was treated as a 4 detector station and
-slave columns were not changed from 0 to -1. As station 1102 is a 4 detector
-station (with slave) this is not a problem.
+secondary columns were not changed from 0 to -1. As station 1102 is a 4 detector
+station (with secondary) this is not a problem.
 
 ```
 2017-02-13 19:34:59,238 - ERROR - No information in HiSPARCNetwork() for sn 91
