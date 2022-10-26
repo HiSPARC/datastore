@@ -4,7 +4,7 @@ Migrate singles tables to new HisparcSingle format.
 
 HisparcSingle columns where `tables.UInt16Col` before
 HiSPARC/datastore@dec64079. Convert old tables to the new format.
-For a missing slave (two detector stations) the slave columns where set
+For a missing secondary (two detector stations) the secondary columns where set
 to all zero, instead of all `-1`. Set those columns to `-1`
 
 logging to logfile `migration.log`
@@ -29,8 +29,8 @@ DATASTORE_PATH = '/data/hisparc/tom/Datastore/frome/'
 
 class MigrateSingles(object):
     """Migrate singles to new table format
-       If the station has no slave *and* slave columns are all zero,
-       replace slave columns with `-1` to correctly represent missing slave.
+       If the station has no secondary *and* secondary columns are all zero,
+       replace secondary columns with `-1` to correctly represent missing secondary.
     """
 
     class HisparcSingle(tables.IsDescription):
@@ -52,7 +52,7 @@ class MigrateSingles(object):
         self.network = HiSPARCNetwork(force_stale=True)
 
     def migrate_table(self, table_path):
-        """Migrate datatable to new format. Fix slave columns."""
+        """Migrate datatable to new format. Fix secondary columns."""
 
         logging.info('Migrating table: %s' % table_path)
         group, table_name, sn = self._parse_path(table_path)
@@ -75,8 +75,8 @@ class MigrateSingles(object):
         table = self.data.get_node(table_path)
         data = table.read()
         data = data.astype(self.singles_dtype)
-        if not self._has_slave(sn):
-            data = self._mark_slave_columns_as_missing(data)
+        if not self._has_secondary(sn):
+            data = self._mark_secondary_columns_as_missing(data)
 
         tmptable.append(data)
         tmptable.flush()
@@ -92,8 +92,8 @@ class MigrateSingles(object):
         sn = numbers[-1]
         return group, table_name, sn
 
-    def _has_slave(self, sn):
-        """Return True if station (sn) has slave (4 detectors)"""
+    def _has_secondary(self, sn):
+        """Return True if station (sn) has secondary (4 detectors)"""
         try:
             n_detectors = len(self.network.get_station(sn).detectors)
         except AttributeError:
@@ -101,13 +101,13 @@ class MigrateSingles(object):
             n_detectors = 4
         return n_detectors == 4
 
-    def _mark_slave_columns_as_missing(self, table):
-        """Replace slave columns with `-1`"""
+    def _mark_secondary_columns_as_missing(self, table):
+        """Replace secondary columns with `-1`"""
 
         cols = ['slv_ch1_low', 'slv_ch2_low', 'slv_ch1_high', 'slv_ch2_high']
         for col in cols:
             if not np.all(table[col] == 0):
-                logging.error("Slave columns are not all zero. "
+                logging.error("Secondary columns are not all zero. "
                               "Leaving data untouched!")
                 return table
 
@@ -115,7 +115,7 @@ class MigrateSingles(object):
         for col in cols:
             table[col] = n * [-1]
 
-        logging.debug("Set all slave columns to `-1`.")
+        logging.debug("Set all secondary columns to `-1`.")
         return table
 
 
