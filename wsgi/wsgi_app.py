@@ -182,8 +182,8 @@ def is_data_suspicious(event_list):
 
     """
     for event in event_list:
-        if event['header']['datetime'].year < 2013:
-            logger.debug('Date < 2013: Timestamp has high suspiciousness.')
+        if event['header']['datetime'].year < 2019:
+            logger.debug('Date < 2019: Timestamp has high suspiciousness.')
             return True
         if event['header']['datetime'].date() == datetime.date(2019, 4, 7):
             logger.debug('Date == Apr 7, 2019: No GPS signal?')
