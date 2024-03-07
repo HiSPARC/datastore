@@ -1,6 +1,4 @@
-"""
-
-Migrate singles tables to new HisparcSingle format.
+"""Migrate singles tables to new HisparcSingle format.
 
 HisparcSingle columns where `tables.UInt16Col` before
 HiSPARC/datastore@dec64079. Convert old tables to the new format.

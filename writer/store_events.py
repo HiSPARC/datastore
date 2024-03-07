@@ -86,15 +86,13 @@ def store_event(datafile, cluster, station_id, event):
             if key in data:
                 data[key][index] = value
             else:
-                logger.warning('Datatype not known on server side: %s (%s)'
-                               % (key, eventtype))
+                logger.warning('Datatype not known on server side: %s (%s)' % (key, eventtype))
         else:
             # uploadcode: EVENTRATE, RED, etc.
             if uploadcode in data:
                 data[uploadcode] = value
             else:
-                logger.warning('Datatype not known on server side: %s (%s)'
-                               % (uploadcode, eventtype))
+                logger.warning('Datatype not known on server side: %s (%s)' % (uploadcode, eventtype))
 
     # write data values to row
     for key, value in upload_codes.items():
@@ -135,11 +133,9 @@ def store_event_list(data_dir, station_id, cluster, event_list):
                     prev_date = date
                 store_event(datafile, cluster, station_id, event)
             else:
-                logger.error("Strange event (no timestamp!), discarding event "
-                             "(station: %s)" % station_id)
+                logger.error("Strange event (no timestamp!), discarding event (station: %s)" % station_id)
         except Exception as inst:
-            logger.error("Cannot process event, discarding event (station: "
-                         "%s), exception: %s" % (station_id, inst))
+            logger.error("Cannot process event, discarding event (station: %s), exception: %s" % (station_id, inst))
             # get the full traceback. There must be a better way...
             exc_info = sys.exc_info()
             with StringIO() as tb:

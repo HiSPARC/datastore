@@ -1,5 +1,6 @@
 import tables
 
+
 def remove_configs(filename, cluster, stationnumber):
     """
     Remove all but the first configuration row for a given cluster and stationnumber

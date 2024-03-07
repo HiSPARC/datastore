@@ -5,7 +5,7 @@ import hashlib
 import logging
 import logging.handlers
 import os
-import pickle as pickle
+import pickle
 import shutil
 import tempfile
 import urllib.parse
@@ -46,15 +46,15 @@ def application(environ, start_response, configfile):
     start_response(status, response_headers)
 
     # read data from the POST variables
-    input = environ['wsgi.input'].readline().decode()
-    vars = urllib.parse.parse_qs(input)
+    post_input = environ['wsgi.input'].readline().decode()
+    post_data = urllib.parse.parse_qs(post_input)
 
     # process POST data
     try:
-        data = vars['data'][0]
-        checksum = vars['checksum'][0]
-        station_id = int(vars['station_id'][0])
-        password = vars['password'][0]
+        data = post_data['data'][0]
+        checksum = post_data['checksum'][0]
+        station_id = int(post_data['station_id'][0])
+        password = post_data['password'][0]
     except (KeyError, EOFError):
         logger.debug("POST (vars) error")
         return [rcodes.RC_ISE_INV_POSTDATA]
@@ -66,8 +66,7 @@ def application(environ, start_response, configfile):
         return [rcodes.RC_PE_INV_STATIONID]
 
     if station_password != password:
-        logger.debug("Station %d: password mismatch: %s" % (station_id,
-                                                            password))
+        logger.debug("Station %d: password mismatch: %s" % (station_id, password))
         return [rcodes.RC_PE_INV_AUTHCODE]
     else:
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
@@ -84,8 +83,7 @@ def application(environ, start_response, configfile):
                     logger.debug('UnicodeDecodeError on python 2 pickle.'
                                  ' Decoding bytestrings.')
                     event_list = decode_object(
-                        pickle.loads(data.encode('iso-8859-1'),
-                                     encoding='bytes'))
+                        pickle.loads(data.encode('iso-8859-1'), encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
                 logger.debug("Station %d: pickling error" % station_id)
                 return [rcodes.RC_PE_PICKLING_ERROR]
@@ -194,11 +192,11 @@ def is_data_suspicious(event_list):
 def decode_object(o):
     """recursively decode all bytestrings in object"""
 
-    if type(o) is bytes:
+    if isinstance(o, bytes):
         return o.decode()
-    elif type(o) is dict:
-        return {decode_object(k): decode_object(v) for k, v in o.items()}
-    elif type(o) is list:
+    elif isinstance(o, dict):
+        return {decode_object(key): decode_object(value) for key, value in o.items()}
+    elif isinstance(o, list):
         return [decode_object(obj) for obj in o]
     else:
         return o

@@ -1,20 +1,21 @@
 #!/usr/local/bin/python
 """ Simple XML-RPC Server to run on the datastore server.
 
-    This daemon should be run on HiSPARC's datastore server.  It will
-    handle the cluster layouts and station passwords.  When an update is
-    necessary, it will reload the HTTP daemon.
+This daemon should be run on HiSPARC's datastore server.  It will
+handle the cluster layouts and station passwords.  When an update is
+necessary, it will reload the HTTP daemon.
 
-    The basis for this code was ripped from the python SimpleXMLRPCServer
-    library documentation and extended.
+The basis for this code was ripped from the python SimpleXMLRPCServer
+library documentation and extended.
 
 """
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
 import urllib.request, urllib.error, urllib.parse
 import hashlib
 import subprocess
 import os
+
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
 
 HASH = '/tmp/hash_datastore'
 DATASTORE_CFG = '/databases/frome/station_list.csv'
