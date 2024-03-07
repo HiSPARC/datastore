@@ -1,10 +1,6 @@
 import base64
 import calendar
 import logging
-import sys
-import traceback
-
-from io import StringIO
 
 from writer import storage
 from writer.upload_codes import eventtype_upload_codes
@@ -28,7 +24,7 @@ def store_event(datafile, cluster, station_id, event):
     try:
         upload_codes = eventtype_upload_codes[eventtype]
     except KeyError:
-        logger.error('Unknown event type: %s, discarding event (station: %s)' % (eventtype, station_id))
+        logger.error(f'Unknown event type: {eventtype}, discarding event (station: {station_id})')
         return
 
     parentnode = storage.get_or_create_station_group(datafile, cluster, station_id)
@@ -83,12 +79,12 @@ def store_event(datafile, cluster, station_id, event):
             if key in data:
                 data[key][index] = value
             else:
-                logger.warning('Datatype not known on server side: %s (%s)' % (key, eventtype))
+                logger.warning(f'Datatype not known on server side: {key} ({eventtype})')
         elif uploadcode in data:
             # uploadcode: EVENTRATE, RED, etc.
             data[uploadcode] = value
         else:
-            logger.warning('Datatype not known on server side: %s (%s)' % (uploadcode, eventtype))
+            logger.warning(f'Datatype not known on server side: {uploadcode} ({eventtype})')
 
     # write data values to row
     for key, value in upload_codes.items():
@@ -129,15 +125,9 @@ def store_event_list(data_dir, station_id, cluster, event_list):
                     prev_date = date
                 store_event(datafile, cluster, station_id, event)
             else:
-                logger.error('Strange event (no timestamp!), discarding event (station: %s)' % station_id)
-        except Exception as inst:
-            logger.error('Cannot process event, discarding event (station: %s), exception: %s' % (station_id, inst))
-            # get the full traceback. There must be a better way...
-            exc_info = sys.exc_info()
-            with StringIO() as tb:
-                traceback.print_exception(*exc_info, file=tb)
-                tb.seek(0)
-                logger.debug('Traceback: %s', tb.read())
+                logger.error(f'Strange event (no timestamp!), discarding event (station: {station_id})')
+        except Exception:
+            logger.exception(f'Cannot process event, discarding event (station: {station_id})')
 
     if datafile:
         datafile.close()

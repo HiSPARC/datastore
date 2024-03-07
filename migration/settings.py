@@ -4,16 +4,20 @@ OLDDB_STATUS = '/databases/frome/migration-olddb-status'
 EWH_STATUS = '/databases/frome/migration-status'
 BATCHSIZE = 1000
 
-OLDDB_HOST = 'oust'
-OLDDB_USER = 'webread'
-OLDDB_DB = 'hisparc'
-OLDDB_PORT = 3306
+OLD_DATABASE = {
+    'host': 'oust',
+    'user': 'webread',
+    'db': 'hisparc',
+    'port': 3306,
+}
 
-EWH_HOST = 'peene'
-EWH_USER = 'analysis'
-EWH_PASSWD = 'Data4analysis!'
-EWH_DB = 'eventwarehouse'
-EWH_PORT = 3306
+EWH_DATABASE = {
+    'host': 'peene',
+    'user': 'analysis',
+    'passwd': 'Data4analysis!',
+    'db': 'eventwarehouse',
+    'port': 3306,
+}
 
 renumbered_stations = {
     1: 501,

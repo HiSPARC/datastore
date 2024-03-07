@@ -63,16 +63,16 @@ def application(environ, start_response, configfile):
     try:
         cluster, station_password = station_list[station_id]
     except KeyError:
-        logger.debug('Station %d is unknown' % station_id)
+        logger.debug(f'Station {station_id} is unknown')
         return [rcodes.RC_PE_INV_STATIONID]
 
     if station_password != password:
-        logger.debug('Station %d: password mismatch: %s' % (station_id, password))
+        logger.debug(f'Station {station_id}: password mismatch: {password}')
         return [rcodes.RC_PE_INV_AUTHCODE]
     else:
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
-            logger.debug('Station %d: checksum mismatch' % station_id)
+            logger.debug(f'Station {station_id}: checksum mismatch')
             return [rcodes.RC_PE_INV_INPUT]
         else:
             try:
@@ -84,11 +84,11 @@ def application(environ, start_response, configfile):
                     logger.debug('UnicodeDecodeError on python 2 pickle. Decoding bytestrings.')
                     event_list = decode_object(pickle.loads(data.encode('iso-8859-1'), encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
-                logger.debug('Station %d: pickling error' % station_id)
+                logger.debug(f'Station {station_id}: pickling error')
                 return [rcodes.RC_PE_PICKLING_ERROR]
 
             store_data(station_id, cluster, event_list)
-            logger.debug('Station %d: succesfully completed' % station_id)
+            logger.debug(f'Station {station_id}: succesfully completed')
             return [rcodes.RC_OK]
 
 
@@ -119,7 +119,7 @@ def do_init(configfile):
 
     # set up logger
     if not logger.handlers:
-        file = config.get('General', 'log') + '-wsgi.%d' % os.getpid()
+        file = config.get('General', 'log') + f'-wsgi.{os.getpid()}'
         handler = logging.handlers.TimedRotatingFileHandler(file, when='midnight', backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
@@ -144,22 +144,22 @@ def do_init(configfile):
 def store_data(station_id, cluster, event_list):
     """Store verified event data to temporary storage"""
 
-    logger.debug('Storing data for station %d' % station_id)
+    logger.debug(f'Storing data for station {station_id}')
 
-    dir = os.path.join(config.get('General', 'data_dir'), 'incoming')
+    directory = os.path.join(config.get('General', 'data_dir'), 'incoming')
     tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
     if is_data_suspicious(event_list):
         logger.debug('Event list marked as suspicious.')
-        dir = os.path.join(config.get('General', 'data_dir'), 'suspicious')
+        directory = os.path.join(config.get('General', 'data_dir'), 'suspicious')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
-    logger.debug('Filename: %s' % file.name)
+    logger.debug(f'Filename: {file.name}')
     data = {'station_id': station_id, 'cluster': cluster, 'event_list': event_list}
     pickle.dump(data, file)
     file.close()
 
-    shutil.move(file.name, dir)
+    shutil.move(file.name, directory)
 
 
 def is_data_suspicious(event_list):

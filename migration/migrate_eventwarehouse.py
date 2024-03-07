@@ -15,13 +15,12 @@ import csv
 import datetime
 import logging
 import os
+import pickle
 import shutil
 import tempfile
 
-import cPickle as pickle
 import MySQLdb
-
-from settings import *
+import settings
 
 
 class Database:
@@ -29,7 +28,7 @@ class Database:
         self.open()
 
     def open(self):
-        self.db = MySQLdb.connect(host=EWH_HOST, user=EWH_USER, passwd=EWH_PASSWD, db=EWH_DB, port=EWH_PORT)
+        self.db = MySQLdb.connect(**settings.EWH_DATABASE)
 
     def close(self):
         self.db.close()
@@ -55,7 +54,7 @@ def read_migration_status():
     """Read migration status from file"""
 
     try:
-        with open(EWH_STATUS) as file:
+        with open(settings.EWH_STATUS) as file:
             status = pickle.load(file)
     except OSError:
         status = {}
@@ -66,7 +65,7 @@ def read_migration_status():
 def write_migration_status(status):
     """Write migration status to file"""
 
-    with open(EWH_STATUS, 'w') as file:
+    with open(settings.EWH_STATUS, 'w') as file:
         pickle.dump(status, file)
 
 
@@ -74,7 +73,7 @@ def read_station_list():
     """Read station, cluster combinations from file"""
 
     station_list = {}
-    with open(STATION_LIST) as file:
+    with open(settings.STATION_LIST) as file:
         reader = csv.reader(file)
         for station in reader:
             if station:
@@ -125,7 +124,7 @@ def get_event_batches(eventwarehouse, status, station):
                 get_event_data(eventwarehouse, events)
                 get_calculated_data(eventwarehouse, events)
                 status[station] = date, offset
-                offset += BATCHSIZE
+                offset += settings.BATCHSIZE
 
                 events = events.values()
                 dts = [x['header']['datetime'] for x in events]
@@ -204,8 +203,8 @@ def get_calculated_data(eventwarehouse, events):
 def store_events(event_list, station, clusters):
     """Store an event batch in the datastore incoming directory"""
 
-    if station in renumbered_stations:
-        station = renumbered_stations[station]
+    if station in settings.renumbered_stations:
+        station = settings.renumbered_stations[station]
 
     # Do not migrate KASCADE data
     if station == 99999:
@@ -213,15 +212,15 @@ def store_events(event_list, station, clusters):
 
     cluster = clusters[station]
 
-    dir = os.path.join(DATASTORE_PATH, 'incoming')
-    tmp_dir = os.path.join(DATASTORE_PATH, 'tmp')
+    directory = os.path.join(settings.DATASTORE_PATH, 'incoming')
+    tmp_dir = os.path.join(settings.DATASTORE_PATH, 'tmp')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
     data = {'station_id': station, 'cluster': cluster, 'event_list': event_list}
     pickle.dump(data, file)
     file.close()
 
-    shutil.move(file.name, dir)
+    shutil.move(file.name, directory)
 
 
 def execute_and_results(eventwarehouse, sql, *args):
