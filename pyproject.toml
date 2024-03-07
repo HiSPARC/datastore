@@ -1,0 +1,37 @@
+[tool.ruff]
+line-length = 120
+target-version = 'py310'
+
+[tool.ruff.format]
+quote-style = 'single'
+
+[tool.ruff.lint]
+select = ['ALL']  # https://docs.astral.sh/ruff/rules/
+ignore = [
+    'ANN',  # Type annotations not enforced
+    'D',  # Ignore docstring checks
+    'PTH',  # Still using os.path
+    'PT',  # Not using pytest
+    'RET',  # Allow elif/else after return
+]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = 'single'
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+section-order = [
+    'future',
+    'standard-library',
+    'third-party',
+    'first-party',
+    'local-folder',
+]
+
+[tool.coverage.run]
+branch = true
+source = [
+    'tests',
+    'writer',
+    'wsgi',
+]
