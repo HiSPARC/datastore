@@ -1,5 +1,5 @@
-""" Storage docstrings
-"""
+"""Storage docstrings"""
+
 import os
 
 import tables
@@ -24,6 +24,7 @@ class HisparcEvent(tables.IsDescription):
 
 class HisparcError(tables.IsDescription):
     """HiSPARC Error messages tables"""
+
     event_id = tables.UInt32Col(pos=0)
     timestamp = tables.Time32Col(pos=1)
     messages = tables.Int32Col(dflt=-1, pos=2)

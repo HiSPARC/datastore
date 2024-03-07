@@ -3,6 +3,7 @@ Acceptance tests for the writer
 
 python 3
 """
+
 import base64
 import configparser
 import os
@@ -23,13 +24,13 @@ WRITER_PATH = os.path.join(self_path, '../')
 DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
 CONFIGFILE = os.path.join(test_data_path, 'config.ini')
 
-CONFIG = """
+CONFIG = f"""
 [General]
 log=hisparc.log
 loglevel=debug
-station_list={datastore}/station_list.csv
-data_dir={datastore}
-""".format(datastore=DATASTORE_PATH)
+station_list={DATASTORE_PATH}/station_list.csv
+data_dir={DATASTORE_PATH}
+"""
 
 with open(CONFIGFILE, 'w') as f:
     f.write(CONFIG)
@@ -45,6 +46,7 @@ def import_writer_app():
     """import the writer"""
     sys.path.append(WRITER_PATH)
     from writer import writer_app
+
     writer_app.config = configparser.ConfigParser()
     writer_app.config.read(CONFIGFILE)
     return writer_app
@@ -57,6 +59,7 @@ def get_writer_app(writer_app=import_writer_app()):
 
 class TestWriterAcceptancePy2Pickles(unittest.TestCase):
     """Acceptance tests for python 2 pickles"""
+
     pickle_version = 'py2'
 
     def setUp(self):
@@ -67,7 +70,9 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.pickle_filename = {}
         for upload_code in UPLOAD_CODES:
             self.pickle_filename[upload_code] = os.path.join(
-                pickle_data_path, 'writer_%s_%s' % (self.pickle_version, upload_code))
+                pickle_data_path,
+                'writer_%s_%s' % (self.pickle_version, upload_code),
+            )
 
     def tearDown(self):
         self.clean_datastore()
@@ -84,10 +89,12 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.assertEqual(len(blobs), 4)
         # traces are sent base64 encoded and decoded by the writer
         tr1 = blobs[0]
-        tr1_b64 = (b'eJxtkFkOAyEMQy/kD7KH+1+sBmZppUoZCI+MQ6wT+kT/5vfRxopD3rze'
-                   b'ygMvfojBFTkhllA3WDVCiIYjfSKDO+9yJKIKEbx3R+iAt8OtYM3PliQ1'
-                   b'i+qUVDFIJyQbQh1hP6HuTJBWgDwmpeAFD/hJEqwNRbCbsRnfsoj3LlA4'
-                   b'j5yAs/oO3THWHI8BJnsy+TLmEL4y7zXXL+Rr1WXSH2/GNu+KD4ouSr4=')
+        tr1_b64 = (
+            b'eJxtkFkOAyEMQy/kD7KH+1+sBmZppUoZCI+MQ6wT+kT/5vfRxopD3rze'
+            b'ygMvfojBFTkhllA3WDVCiIYjfSKDO+9yJKIKEbx3R+iAt8OtYM3PliQ1'
+            b'i+qUVDFIJyQbQh1hP6HuTJBWgDwmpeAFD/hJEqwNRbCbsRnfsoj3LlA4'
+            b'j5yAs/oO3THWHI8BJnsy+TLmEL4y7zXXL+Rr1WXSH2/GNu+KD4ouSr4='
+        )
         self.assertEqual(tr1, base64.decodebytes(tr1_b64))
 
     def test_singles_acceptance(self):
@@ -145,6 +152,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
 
 class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):
     """Acceptance tests for python 3 pickles"""
+
     pickle_version = 'py3'
 
 

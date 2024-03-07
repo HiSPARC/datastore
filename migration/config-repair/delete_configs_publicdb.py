@@ -3,11 +3,11 @@ delete (incorrect) configuration from publicdb database
 
 delete all configurations from (STATION, DATE). Set num_config in summary
 """
+
 import os
 import sys
 
 from datetime import date
-
 
 STATION = 91
 DATE = date(2017, 4, 12)
@@ -20,10 +20,10 @@ sys.path.append(PUBLICDB_PATH)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'publicdb.settings'
 
 import django
+
 django.setup()
 
-from publicdb.histograms.models import Summary, Configuration
-
+from publicdb.histograms.models import Configuration, Summary
 
 summary = Summary.objects.get(station__number=STATION, date=DATE)
 assert summary.station.number == STATION

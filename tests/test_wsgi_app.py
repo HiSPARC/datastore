@@ -18,13 +18,13 @@ WSGI_APP_PATH = os.path.join(self_path, '../')
 DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
 CONFIGFILE = os.path.join(test_data_path, 'config.ini')
 
-CONFIG = """
+CONFIG = f"""
 [General]
 log=hisparc.log
 loglevel=debug
-station_list={datastore}/station_list.csv
-data_dir={datastore}
-""".format(datastore=DATASTORE_PATH)
+station_list={DATASTORE_PATH}/station_list.csv
+data_dir={DATASTORE_PATH}
+"""
 
 with open(CONFIGFILE, 'w') as f:
     f.write(CONFIG)
@@ -41,6 +41,7 @@ def import_wsgi_app():
     """import the WSGI application"""
     sys.path.append(WSGI_APP_PATH)
     from wsgi import wsgi_app
+
     return functools.partial(wsgi_app.application, configfile=CONFIGFILE)
 
 
@@ -50,7 +51,6 @@ def get_wsgi_app(wsgi_app=import_wsgi_app()):
 
 
 class TestWsgiAppAcceptance(unittest.TestCase):
-
     def setUp(self):
         self.station_id = STATION_ID
         self.password = PASSWORD
@@ -126,10 +126,12 @@ class TestWsgiAppAcceptance(unittest.TestCase):
         if checksum is None:
             checksum = hashlib.md5(pickled_data).hexdigest()
 
-        data = {'station_id': self.station_id,
-                'password': self.password,
-                'data': pickled_data.decode('latin-1'),
-                'checksum': checksum}
+        data = {
+            'station_id': self.station_id,
+            'password': self.password,
+            'data': pickled_data.decode('latin-1'),
+            'checksum': checksum,
+        }
 
         response = self.app.post('/', data)
         return response.body
@@ -150,13 +152,9 @@ class TestWsgiAppAcceptance(unittest.TestCase):
     def assert_num_files_in_datastore(self, incoming=None, suspicious=None):
         self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'tmp'))), 0)
         if incoming is not None:
-            self.assertEqual(
-                len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))),
-                incoming)
+            self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))), incoming)
         if suspicious is not None:
-            self.assertEqual(
-                len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'suspicious'))),
-                suspicious)
+            self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'suspicious'))), suspicious)
 
     def assert_num_events_written(self, number_of_events):
         fn = self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))[0]

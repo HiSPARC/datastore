@@ -9,7 +9,6 @@ logging to logfile `migration.log`
 prints progressbars for searching and processing tables.
 
 """
-from __future__ import print_function
 
 import glob
 import logging
@@ -17,18 +16,18 @@ import re
 
 import numpy as np
 import tables
-from sapphire.utils import pbar
-from sapphire import HiSPARCNetwork
 
+from sapphire import HiSPARCNetwork
+from sapphire.utils import pbar
 
 DATASTORE_PATH = '/data/hisparc/tom/Datastore/frome/'
 # DATASTORE_PATH = '/databases/frome/'
 
 
-class MigrateSingles(object):
+class MigrateSingles:
     """Migrate singles to new table format
-       If the station has no secondary *and* secondary columns are all zero,
-       replace secondary columns with `-1` to correctly represent missing secondary.
+    If the station has no secondary *and* secondary columns are all zero,
+    replace secondary columns with `-1` to correctly represent missing secondary.
     """
 
     class HisparcSingle(tables.IsDescription):
@@ -45,8 +44,7 @@ class MigrateSingles(object):
 
     def __init__(self, data):
         self.data = data
-        self.singles_dtype = \
-            tables.description.dtype_from_descr(self.HisparcSingle)
+        self.singles_dtype = tables.description.dtype_from_descr(self.HisparcSingle)
         self.network = HiSPARCNetwork(force_stale=True)
 
     def migrate_table(self, table_path):
@@ -62,13 +60,11 @@ class MigrateSingles(object):
         tmp_table_name = '_t_%s' % table_name
 
         try:
-            tmptable = self.data.create_table(group, tmp_table_name,
-                                              description=self.HisparcSingle)
+            tmptable = self.data.create_table(group, tmp_table_name, description=self.HisparcSingle)
         except tables.NodeError:
-            logging.error('%s/_t_%s exists. Removing.' % (group, table_name))
+            logging.exception('%s/_t_%s exists. Removing.' % (group, table_name))
             self.data.remove_node(group, '_t_%s' % table_name)
-            tmptable = self.data.create_table(group, tmp_table_name,
-                                              description=self.HisparcSingle)
+            tmptable = self.data.create_table(group, tmp_table_name, description=self.HisparcSingle)
 
         table = self.data.get_node(table_path)
         data = table.read()
@@ -82,7 +78,7 @@ class MigrateSingles(object):
         self.data.rename_node(tmptable, 'singles')
 
     def _parse_path(self, path):
-        """ '/cluster/s501/singles' ---> '/cluster/s501' 'singles', 501 """
+        """'/cluster/s501/singles' ---> '/cluster/s501' 'singles', 501"""
 
         group, table_name = tables.path.split_path(path)
         re_number = re.compile('[0-9]+$')
@@ -95,7 +91,7 @@ class MigrateSingles(object):
         try:
             n_detectors = len(self.network.get_station(sn).detectors)
         except AttributeError:
-            logging.error('No information in HiSPARCNetwork() for sn %d' % sn)
+            logging.exception('No information in HiSPARCNetwork() for sn %d' % sn)
             n_detectors = 4
         return n_detectors == 4
 
@@ -105,15 +101,14 @@ class MigrateSingles(object):
         cols = ['slv_ch1_low', 'slv_ch2_low', 'slv_ch1_high', 'slv_ch2_high']
         for col in cols:
             if not np.all(table[col] == 0):
-                logging.error("Secondary columns are not all zero. "
-                              "Leaving data untouched!")
+                logging.error('Secondary columns are not all zero. Leaving data untouched!')
                 return table
 
         n = len(table)
         for col in cols:
             table[col] = n * [-1]
 
-        logging.debug("Set all secondary columns to `-1`.")
+        logging.debug('Set all secondary columns to `-1`.')
         return table
 
 
@@ -125,7 +120,6 @@ def get_queue(datastore_path):
 
     # Singles tables were added in Feb, 2016.
     for fn in pbar(glob.glob(datastore_path + '/201[6,7]/*/*h5')):
-
         singles_tables = []
         with tables.open_file(fn, 'r') as data:
             for node in data.walk_nodes('/', 'Table'):
@@ -148,8 +142,7 @@ def get_queue(datastore_path):
             logging.info('Found %d tables in %s' % (len(singles_tables), fn))
 
     n = sum(len(v) for v in queue.itervalues())
-    logging.info('Found %d unmigrated tables '
-                 'in %d datastore files.' % (n, len(queue)))
+    logging.info('Found %d unmigrated tables in %d datastore files.' % (n, len(queue)))
     return queue
 
 
@@ -188,9 +181,8 @@ def migrate():
 
 
 if __name__ == '__main__':
-    fmt = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(filename='migration.log', level=logging.INFO,
-                        format=fmt)
+    fmt = '%(asctime)s - %(levelname)s - %(message)s'
+    logging.basicConfig(filename='migration.log', level=logging.INFO, format=fmt)
 
     logging.info('Datastore path: %s', DATASTORE_PATH)
     migrate()

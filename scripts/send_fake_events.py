@@ -2,15 +2,13 @@ import datetime
 import random
 
 import numpy as np
-
 import pysparc.events
 import pysparc.storage
 
 from sapphire import datetime_to_gps
 
 
-class FakeMessage(object):
-
+class FakeMessage:
     def __init__(self, dt=datetime.datetime.now()):
         self.datetime = dt
         self.timestamp = datetime_to_gps(dt)

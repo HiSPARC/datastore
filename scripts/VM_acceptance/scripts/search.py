@@ -2,10 +2,9 @@
 show contents of datastore pickles
 """
 
-from __future__ import print_function
-
 import os
 import pickle
+
 from collections import defaultdict
 
 entries = os.listdir('.')
@@ -26,5 +25,5 @@ for fn in entries:
         upl_code = event['header']['eventtype_uploadcode']
         d[upl_code] += 1
         totals[upl_code] += 1
-    print (fn, d)
+    print(fn, d)
 print(totals)

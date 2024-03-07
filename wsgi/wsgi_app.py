@@ -12,19 +12,20 @@ import urllib.parse
 
 from . import rcodes
 
-LEVELS = {'debug': logging.DEBUG,
-          'info': logging.INFO,
-          'warning': logging.WARNING,
-          'error': logging.ERROR,
-          'critical': logging.CRITICAL}
+LEVELS = {
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL,
+}
 
 logger = logging.getLogger('wsgi_app')
-formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
-                              '.%(funcName)s.%(levelname)s: %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d].%(funcName)s.%(levelname)s: %(message)s')
 
 
 def application(environ, start_response, configfile):
-    """ The hisparc upload application
+    """The hisparc upload application
 
     This handler is called by uWSGI whenever someone requests our URL.
 
@@ -56,22 +57,22 @@ def application(environ, start_response, configfile):
         station_id = int(post_data['station_id'][0])
         password = post_data['password'][0]
     except (KeyError, EOFError):
-        logger.debug("POST (vars) error")
+        logger.debug('POST (vars) error')
         return [rcodes.RC_ISE_INV_POSTDATA]
 
     try:
         cluster, station_password = station_list[station_id]
     except KeyError:
-        logger.debug("Station %d is unknown" % station_id)
+        logger.debug('Station %d is unknown' % station_id)
         return [rcodes.RC_PE_INV_STATIONID]
 
     if station_password != password:
-        logger.debug("Station %d: password mismatch: %s" % (station_id, password))
+        logger.debug('Station %d: password mismatch: %s' % (station_id, password))
         return [rcodes.RC_PE_INV_AUTHCODE]
     else:
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
-            logger.debug("Station %d: checksum mismatch" % station_id)
+            logger.debug('Station %d: checksum mismatch' % station_id)
             return [rcodes.RC_PE_INV_INPUT]
         else:
             try:
@@ -80,16 +81,14 @@ def application(environ, start_response, configfile):
                 except UnicodeDecodeError:
                     # string was probably pickled on python 2.
                     # decode as bytes and decode all bytestrings to string.
-                    logger.debug('UnicodeDecodeError on python 2 pickle.'
-                                 ' Decoding bytestrings.')
-                    event_list = decode_object(
-                        pickle.loads(data.encode('iso-8859-1'), encoding='bytes'))
+                    logger.debug('UnicodeDecodeError on python 2 pickle. Decoding bytestrings.')
+                    event_list = decode_object(pickle.loads(data.encode('iso-8859-1'), encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
-                logger.debug("Station %d: pickling error" % station_id)
+                logger.debug('Station %d: pickling error' % station_id)
                 return [rcodes.RC_PE_PICKLING_ERROR]
 
             store_data(station_id, cluster, event_list)
-            logger.debug("Station %d: succesfully completed" % station_id)
+            logger.debug('Station %d: succesfully completed' % station_id)
             return [rcodes.RC_OK]
 
 
@@ -121,9 +120,7 @@ def do_init(configfile):
     # set up logger
     if not logger.handlers:
         file = config.get('General', 'log') + '-wsgi.%d' % os.getpid()
-        handler = logging.handlers.TimedRotatingFileHandler(file,
-                                                            when='midnight',
-                                                            backupCount=14)
+        handler = logging.handlers.TimedRotatingFileHandler(file, when='midnight', backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
@@ -158,8 +155,7 @@ def store_data(station_id, cluster, event_list):
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
     logger.debug('Filename: %s' % file.name)
-    data = {'station_id': station_id, 'cluster': cluster,
-            'event_list': event_list}
+    data = {'station_id': station_id, 'cluster': cluster, 'event_list': event_list}
     pickle.dump(data, file)
     file.close()
 

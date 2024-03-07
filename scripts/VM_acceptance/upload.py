@@ -7,24 +7,22 @@ python upload.py folder_name
 
 """
 
-import datetime
-import hashlib
-import requests
 import glob
+import hashlib
 import os
 import pickle
 import sys
 
-from sapphire.utils import pbar
+import requests
 
+from sapphire.utils import pbar
 
 DATASTORE_VM = 'http://192.168.99.13/nikhef/upload'
 
 STATION_LIST = ((98, 'fake_station'), (99, 'fake_station'))
 
 
-class Uploader(object):
-
+class Uploader:
     def __init__(self, url, station_list):
         self.url = url
         self.passwords = {}
@@ -48,20 +46,22 @@ class Uploader(object):
         if checksum is None:
             checksum = hashlib.md5(pickled_data).hexdigest()
 
-        payload = {'station_id': sn,
-                   'password': self.passwords[sn],
-                   'data': pickled_data.decode('iso-8859-1'),
-                   'checksum': checksum}
+        payload = {
+            'station_id': sn,
+            'password': self.passwords[sn],
+            'data': pickled_data.decode('iso-8859-1'),
+            'checksum': checksum,
+        }
         try:
             r = requests.post(self.url, data=payload, timeout=10)
             r.raise_for_status()
-        except (ConnectionError) as exc:
+        except ConnectionError as exc:
             raise UploadError(str(exc))
         else:
             return r.text
 
 
-class YieldPickles(object):
+class YieldPickles:
     """yield pickles from a folder"""
 
     def __init__(self, folder):
@@ -84,8 +84,7 @@ if __name__ == '__main__':
     folder_to_upload = sys.argv[1]
     pickles = YieldPickles(folder_to_upload)
 
-    print('Uploading %d pickles from folder: %s' % (len(pickles),
-                                                    folder_to_upload))
+    print('Uploading %d pickles from folder: %s' % (len(pickles), folder_to_upload))
     for sn, event_list in pbar(pickles):
         assert sn in [98, 99]
         try:

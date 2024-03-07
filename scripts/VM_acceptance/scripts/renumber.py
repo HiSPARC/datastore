@@ -6,6 +6,7 @@ Renumber data from real stations to test stations
 
 FOLDER = 'pickles/'
 
+
 def renumber_pickles(folder):
     """relabel pickles to station_id = 99"""
     files = glob.glob(os.path.join(folder, 'tmp*'))
@@ -21,8 +22,7 @@ def renumber_pickles(folder):
         else:
             print('skip:', x['station_id'])
             continue
-        data = {'station_id': 99, 'cluster': 'Amsterdam',
-            'event_list': x['event_list']}
+        data = {'station_id': 99, 'cluster': 'Amsterdam', 'event_list': x['event_list']}
         with open(fn, 'wb') as f:
             pickle.dump(data, f)
 
