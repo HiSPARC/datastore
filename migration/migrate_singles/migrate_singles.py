@@ -50,20 +50,20 @@ class MigrateSingles:
     def migrate_table(self, table_path):
         """Migrate datatable to new format. Fix secondary columns."""
 
-        logging.info('Migrating table: %s' % table_path)
+        logging.info(f'Migrating table: {table_path}')
         group, table_name, sn = self._parse_path(table_path)
 
         if table_name != 'singles':
-            logging.error('Table %s not `singles` skipping!' % table_path)
+            logging.error(f'Table {table_path} not `singles` skipping!')
             return None
 
-        tmp_table_name = '_t_%s' % table_name
+        tmp_table_name = f'_t_{table_name}'
 
         try:
             tmptable = self.data.create_table(group, tmp_table_name, description=self.HisparcSingle)
         except tables.NodeError:
-            logging.exception('%s/_t_%s exists. Removing.' % (group, table_name))
-            self.data.remove_node(group, '_t_%s' % table_name)
+            logging.exception(f'{group}/_t_{table_name} exists. Removing.')
+            self.data.remove_node(group, f'_t_{table_name}')
             tmptable = self.data.create_table(group, tmp_table_name, description=self.HisparcSingle)
 
         table = self.data.get_node(table_path)
@@ -91,7 +91,7 @@ class MigrateSingles:
         try:
             n_detectors = len(self.network.get_station(sn).detectors)
         except AttributeError:
-            logging.exception('No information in HiSPARCNetwork() for sn %d' % sn)
+            logging.exception(f'No information in HiSPARCNetwork() for sn {sn}')
             n_detectors = 4
         return n_detectors == 4
 
@@ -129,20 +129,20 @@ def get_queue(datastore_path):
                         continue
                     type_ = type(node.description.mas_ch1_low)
                     if type_ == tables.UInt16Col:
-                        logging.debug('Found: %s' % table_path)
+                        logging.debug(f'Found: {table_path}')
                         singles_tables.append(table_path)
                     elif type_ == tables.Int32Col:
-                        logging.debug('Skipping migrated: %s' % table_path)
+                        logging.debug(f'Skipping migrated: {table_path}')
                         continue
                     else:
-                        logging.error('%s in unknown format!' % table_path)
+                        logging.error(f'{table_path} in unknown format!')
 
         if singles_tables:
             queue[fn] = singles_tables
-            logging.info('Found %d tables in %s' % (len(singles_tables), fn))
+            logging.info(f'Found {len(singles_tables)} tables in {fn}')
 
     n = sum(len(v) for v in queue.itervalues())
-    logging.info('Found %d unmigrated tables in %d datastore files.' % (n, len(queue)))
+    logging.info(f'Found {n} unmigrated tables in {len(queue)} datastore files.')
     return queue
 
 
@@ -160,20 +160,20 @@ def migrate():
     queue = get_queue(DATASTORE_PATH)
     print('migrating:')
     for path in pbar(queue.keys()):
-        logging.info('Migrating: %s' % path)
+        logging.info(f'Migrating: {path}')
         with tables.open_file(path, 'a') as data:
             migration = MigrateSingles(data)
             for table in queue[path]:
-                logging.debug('Processing table: %s' % table)
+                logging.debug(f'Processing table: {table}')
                 migration.migrate_table(table)
 
     queue = get_queue(DATASTORE_PATH)
     if queue:
         logging.error('Found unprocessed tables after migration')
-        for path in queue.keys():
-            logging.error('Unprocessed tables in: %s' % path)
+        for path in queue:
+            logging.error(f'Unprocessed tables in: {path}')
             for table in queue[path]:
-                logging.error('%s' % table)
+                logging.error(f'{table}')
     else:
         logging.info('********************')
         logging.info('Migration succesful!')

@@ -31,7 +31,7 @@ class Uploader:
             assert sn in [98, 99], 'Do not use this on real data!'
 
     def upload(self, sn, eventlist):
-        assert type(eventlist) is list, 'The data is not a list!'
+        assert isinstance(eventlist, list), 'The data is not a list!'
 
         pickled_data = pickle.dumps(eventlist, protocol=0)
         return self._upload_data(sn, pickled_data)
@@ -52,13 +52,9 @@ class Uploader:
             'data': pickled_data.decode('iso-8859-1'),
             'checksum': checksum,
         }
-        try:
-            r = requests.post(self.url, data=payload, timeout=10)
-            r.raise_for_status()
-        except ConnectionError as exc:
-            raise UploadError(str(exc))
-        else:
-            return r.text
+        r = requests.post(self.url, data=payload, timeout=10)
+        r.raise_for_status()
+        return r.text
 
 
 class YieldPickles:

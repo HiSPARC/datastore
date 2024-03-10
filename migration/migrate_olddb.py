@@ -108,7 +108,7 @@ def migrate_data(database, status, table, station, clusters):
     if status.has_key(table):
         return
     else:
-        logger.info('Migrating table %s' % table)
+        logger.info(f'Migrating table {table}')
         status[table] = True
         events = get_events(database, table)
         events = process_events(events, station)

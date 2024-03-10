@@ -96,9 +96,9 @@ def get_stations(eventwarehouse):
 def migrate_data(eventwarehouse, status, station, clusters):
     """Migrate data for a station"""
 
-    logger.info('Starting migration for station %d' % station)
+    logger.info(f'Starting migration for station {station}')
     for start, end, batch in get_event_batches(eventwarehouse, status, station):
-        logger.info('Migrating batch from %s to %s' % (start, end))
+        logger.info(f'Migrating batch from {start} to {end}')
         store_events(batch, station, clusters)
         write_migration_status(status)
         logger.info('Done.')
@@ -112,12 +112,12 @@ def get_event_batches(eventwarehouse, status, station):
 
     for date in get_station_date_list(eventwarehouse, status, station):
         if date == status[station][0]:
-            offset = status[station][1] + BATCHSIZE
+            offset = status[station][1] + settings.BATCHSIZE
         else:
             offset = 0
 
         while True:
-            events = get_events(eventwarehouse, station, date, offset, BATCHSIZE)
+            events = get_events(eventwarehouse, station, date, offset, settings.BATCHSIZE)
             if not events:
                 break
             else:
@@ -172,12 +172,12 @@ def get_event_data(eventwarehouse, events):
         'SELECT event_id, uploadcode, valuefield, integervalue, '
         'doublevalue, textvalue, blobvalue FROM eventdata JOIN '
         'eventdatatype USING(eventdatatype_id) JOIN valuetype '
-        'USING(valuetype_id) WHERE event_id IN (%s)' % event_ids
+        f'USING(valuetype_id) WHERE event_id IN ({event_ids})'
     )
     results = execute_and_results(eventwarehouse, sql)
 
-    for event_id, uploadcode, valuefield, integervalue, doublevalue, textvalue, blobvalue in results:
-        exec('value = %s' % valuefield)
+    for event_id, uploadcode, valuefield, _, _, _, _ in results:
+        exec(f'value = {valuefield}')
         if uploadcode[:-1] == 'TR':
             value = base64.b64encode(value)
         events[event_id]['datalist'].append({'data_uploadcode': uploadcode, 'data': value})
@@ -191,12 +191,12 @@ def get_calculated_data(eventwarehouse, events):
         'SELECT event_id, uploadcode, valuefield, integervalue, '
         'doublevalue FROM calculateddata JOIN calculateddatatype '
         'USING(calculateddatatype_id) JOIN valuetype '
-        'USING(valuetype_id) WHERE event_id IN (%s)' % event_ids
+        f'USING(valuetype_id) WHERE event_id IN ({event_ids})'
     )
     results = execute_and_results(eventwarehouse, sql)
 
-    for event_id, uploadcode, valuefield, integervalue, doublevalue in results:
-        exec('value = %s' % valuefield)
+    for event_id, uploadcode, valuefield, _, _ in results:
+        exec(f'value = {valuefield}')
         events[event_id]['datalist'].append({'data_uploadcode': uploadcode, 'data': value})
 
 

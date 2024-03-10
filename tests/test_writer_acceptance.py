@@ -52,8 +52,10 @@ def import_writer_app():
     return writer_app
 
 
-def get_writer_app(writer_app=import_writer_app()):
+def get_writer_app(writer_app=None):
     """return the WSGI application"""
+    if writer_app is None:
+        writer_app = import_writer_app()
     return writer_app
 
 
@@ -71,7 +73,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         for upload_code in UPLOAD_CODES:
             self.pickle_filename[upload_code] = os.path.join(
                 pickle_data_path,
-                'writer_%s_%s' % (self.pickle_version, upload_code),
+                f'writer_{self.pickle_version}_{upload_code}',
             )
 
     def tearDown(self):

@@ -4,6 +4,10 @@ Renumber data from real stations to test stations
  station 501 -> station 98
 """
 
+import glob
+import os
+import pickle
+
 FOLDER = 'pickles/'
 
 

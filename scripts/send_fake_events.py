@@ -9,11 +9,13 @@ from sapphire import datetime_to_gps
 
 
 class FakeMessage:
-    def __init__(self, dt=datetime.datetime.now()):
+    def __init__(self, dt=None):
+        if dt is None:
+            dt = datetime.datetime.now()
         self.datetime = dt
         self.timestamp = datetime_to_gps(dt)
-        self.nanoseconds = int(random.uniform(0, 1e9))
-        self.ext_timestamp = int(self.timestamp) * int(1e9) + self.nanoseconds
+        self.nanoseconds = int(random.uniform(0, 1_000_000_000))
+        self.ext_timestamp = int(self.timestamp) * 1_000_000_000 + self.nanoseconds
         self.trigger_pattern = 1
         self.trace_ch1 = np.arange(10)
         self.trace_ch2 = np.arange(10)
