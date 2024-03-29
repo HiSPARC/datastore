@@ -1,20 +1,22 @@
 #!/usr/local/bin/python
-""" Simple XML-RPC Server to run on the datastore server.
+"""Simple XML-RPC Server to run on the datastore server.
 
-    This daemon should be run on HiSPARC's datastore server.  It will
-    handle the cluster layouts and station passwords.  When an update is
-    necessary, it will reload the HTTP daemon.
+This daemon should be run on HiSPARC's datastore server.  It will
+handle the cluster layouts and station passwords.  When an update is
+necessary, it will reload the HTTP daemon.
 
-    The basis for this code was ripped from the python SimpleXMLRPCServer
-    library documentation and extended.
+The basis for this code was ripped from the python SimpleXMLRPCServer
+library documentation and extended.
 
 """
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
-import urllib.request, urllib.error, urllib.parse
+
 import hashlib
-import subprocess
 import os
+import urllib.error
+import urllib.parse
+import urllib.request
+
+from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 HASH = '/tmp/hash_datastore'
 DATASTORE_CFG = '/databases/frome/station_list.csv'
@@ -30,9 +32,9 @@ def reload_datastore():
     new_hash = hashlib.sha1(datastore_cfg).hexdigest()
 
     try:
-        with open(HASH, 'r') as file:
+        with open(HASH) as file:
             old_hash = file.readline()
-    except IOError:
+    except OSError:
         old_hash = None
 
     if new_hash == old_hash:
@@ -57,8 +59,7 @@ if __name__ == '__main__':
         rpc_paths = ('/RPC2',)
 
     # Create server
-    server = SimpleXMLRPCServer(DATASTORE_XMLRPC_SERVER,
-                                requestHandler=RequestHandler)
+    server = SimpleXMLRPCServer(DATASTORE_XMLRPC_SERVER, requestHandler=RequestHandler)
     server.register_introspection_functions()
 
     server.register_function(reload_datastore)

@@ -3,11 +3,11 @@
 This is the final version that was run to do the migration
 
 """
+
 import datetime
 import os
 
 import tables
-
 
 START_DATE = datetime.date(2010, 12, 1)
 TRANSISTION_DATE = datetime.date(2011, 1, 7)
@@ -38,34 +38,38 @@ def migrate():
         if os.path.isfile(path):
             file = tables.openFile(path, 'a')
             try:
-                print 'Found data file for ' + date.isoformat() + '...',
+                print(f'Found data file for {date.isoformat()}...')
                 if date >= TRANSISTION_DATE:
                     # After transistion date data will be in cluster amsterdam
                     # Move and rename the node
                     node = file.root.hisparc.cluster_amsterdam.station_701
-                    print 'moving data..',
+                    print('moving data..')
                     try:
                         target = file.root.hisparc.cluster_karlsruhe
                     except tables.NoSuchNodeError:
-                        target = file.createGroup('/hisparc', 'cluster_karlsruhe',
-                                                  'HiSPARC cluster Karlsruhe data',
-                                                  createparents=True)
+                        target = file.createGroup(
+                            '/hisparc',
+                            'cluster_karlsruhe',
+                            'HiSPARC cluster Karlsruhe data',
+                            createparents=True,
+                        )
                     node._f_move(newparent=target, newname='station_70001')
-                    print 'done.'
+                    print('done.')
                 else:
                     # Before transition date data already in cluster karlsruhe
                     # Only rename the node
                     node = file.root.hisparc.cluster_karlsruhe.station_701
-                    print 'moving data..',
+                    print('moving data..')
                     node._f_rename('station_70001')
-                    print 'done.'
+                    print('done.')
             except tables.NoSuchNodeError:
-                print 'no data group to move.'
+                print('no data group to move.')
             file.close()
         else:
-            print 'No data file for ' + date.isoformat() + '.'
+            print(f'No data file for {date.isoformat()}.')
 
         date += datetime.timedelta(days=1)
+
 
 if __name__ == '__main__':
     migrate()

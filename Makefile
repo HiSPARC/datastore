@@ -1,17 +1,21 @@
-.PHONY: test unittests flaketest doctest devinstall
+.PHONY: test
+test: unittests linttest doctest
 
-test: unittests flaketest doctest
-
+.PHONY: unittests
 unittests:
 	coverage run -m unittest discover tests -v
 	coverage report
 
-flaketest:
-	flake8
+.PHONY: linttest
+linttest:
+	ruff check .
+	ruff format --check .
 
+.PHONY: doctest
 doctest:
 	sphinx-build -anW doc doc/_build/html
 
+.PHONY: devinstall
 devinstall:
 	conda install --yes --file requirements-conda.txt
 	pip install -r requirements-dev.txt

@@ -1,0 +1,51 @@
+[tool.ruff]
+line-length = 120
+target-version = 'py310'
+
+[tool.ruff.format]
+quote-style = 'single'
+
+[tool.ruff.lint]
+select = ['ALL']  # https://docs.astral.sh/ruff/rules/
+ignore = [
+    'ANN',  # Type annotations not enforced
+    'C901',  # Allow complex functions
+    'D',  # Ignore docstring checks
+    'G004',  # Allow f-string in logging
+    'INP001',  # Allow scripts in implicit namespaces
+    'PLR0912',  # Allow functions with many branches
+    'PT',  # Not using pytest
+    'PTH',  # Still using os.path
+    'RET',  # Allow elif/else after return
+    'S101',  # Assert is used to prevent incorrect
+    'S105',  # Some hardcoded test passwords
+    'S301',  # Allow usage of pickle
+    'S324',  # Allow usage of md5
+    'SIM108',  # No need for ternary operator
+    'SLF001',  # Allow using private members
+]
+
+[tool.ruff.lint.per-file-ignores]
+'migration/*.py' = ['T201']  # Allow printing
+'scripts/*.py' = ['T201']  # Allow printing
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = 'single'
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+section-order = [
+    'future',
+    'standard-library',
+    'third-party',
+    'first-party',
+    'local-folder',
+]
+
+[tool.coverage.run]
+branch = true
+source = [
+    'tests',
+    'writer',
+    'wsgi',
+]

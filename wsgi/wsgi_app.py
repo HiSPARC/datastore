@@ -5,26 +5,27 @@ import hashlib
 import logging
 import logging.handlers
 import os
-import pickle as pickle
+import pickle
 import shutil
 import tempfile
 import urllib.parse
 
 from . import rcodes
 
-LEVELS = {'debug': logging.DEBUG,
-          'info': logging.INFO,
-          'warning': logging.WARNING,
-          'error': logging.ERROR,
-          'critical': logging.CRITICAL}
+LEVELS = {
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL,
+}
 
 logger = logging.getLogger('wsgi_app')
-formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
-                              '.%(funcName)s.%(levelname)s: %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d].%(funcName)s.%(levelname)s: %(message)s')
 
 
 def application(environ, start_response, configfile):
-    """ The hisparc upload application
+    """The hisparc upload application
 
     This handler is called by uWSGI whenever someone requests our URL.
 
@@ -46,33 +47,32 @@ def application(environ, start_response, configfile):
     start_response(status, response_headers)
 
     # read data from the POST variables
-    input = environ['wsgi.input'].readline().decode()
-    vars = urllib.parse.parse_qs(input)
+    post_input = environ['wsgi.input'].readline().decode()
+    post_data = urllib.parse.parse_qs(post_input)
 
     # process POST data
     try:
-        data = vars['data'][0]
-        checksum = vars['checksum'][0]
-        station_id = int(vars['station_id'][0])
-        password = vars['password'][0]
+        data = post_data['data'][0]
+        checksum = post_data['checksum'][0]
+        station_id = int(post_data['station_id'][0])
+        password = post_data['password'][0]
     except (KeyError, EOFError):
-        logger.debug("POST (vars) error")
+        logger.debug('POST (vars) error')
         return [rcodes.RC_ISE_INV_POSTDATA]
 
     try:
         cluster, station_password = station_list[station_id]
     except KeyError:
-        logger.debug("Station %d is unknown" % station_id)
+        logger.debug(f'Station {station_id} is unknown')
         return [rcodes.RC_PE_INV_STATIONID]
 
     if station_password != password:
-        logger.debug("Station %d: password mismatch: %s" % (station_id,
-                                                            password))
+        logger.debug(f'Station {station_id}: password mismatch: {password}')
         return [rcodes.RC_PE_INV_AUTHCODE]
     else:
         our_checksum = hashlib.md5(data.encode('iso-8859-1')).hexdigest()
         if our_checksum != checksum:
-            logger.debug("Station %d: checksum mismatch" % station_id)
+            logger.debug(f'Station {station_id}: checksum mismatch')
             return [rcodes.RC_PE_INV_INPUT]
         else:
             try:
@@ -81,17 +81,14 @@ def application(environ, start_response, configfile):
                 except UnicodeDecodeError:
                     # string was probably pickled on python 2.
                     # decode as bytes and decode all bytestrings to string.
-                    logger.debug('UnicodeDecodeError on python 2 pickle.'
-                                 ' Decoding bytestrings.')
-                    event_list = decode_object(
-                        pickle.loads(data.encode('iso-8859-1'),
-                                     encoding='bytes'))
+                    logger.debug('UnicodeDecodeError on python 2 pickle. Decoding bytestrings.')
+                    event_list = decode_object(pickle.loads(data.encode('iso-8859-1'), encoding='bytes'))
             except (pickle.UnpicklingError, AttributeError):
-                logger.debug("Station %d: pickling error" % station_id)
+                logger.debug(f'Station {station_id}: pickling error')
                 return [rcodes.RC_PE_PICKLING_ERROR]
 
             store_data(station_id, cluster, event_list)
-            logger.debug("Station %d: succesfully completed" % station_id)
+            logger.debug(f'Station {station_id}: succesfully completed')
             return [rcodes.RC_OK]
 
 
@@ -122,10 +119,8 @@ def do_init(configfile):
 
     # set up logger
     if not logger.handlers:
-        file = config.get('General', 'log') + '-wsgi.%d' % os.getpid()
-        handler = logging.handlers.TimedRotatingFileHandler(file,
-                                                            when='midnight',
-                                                            backupCount=14)
+        file = config.get('General', 'log') + f'-wsgi.{os.getpid()}'
+        handler = logging.handlers.TimedRotatingFileHandler(file, when='midnight', backupCount=14)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
@@ -149,23 +144,22 @@ def do_init(configfile):
 def store_data(station_id, cluster, event_list):
     """Store verified event data to temporary storage"""
 
-    logger.debug('Storing data for station %d' % station_id)
+    logger.debug(f'Storing data for station {station_id}')
 
-    dir = os.path.join(config.get('General', 'data_dir'), 'incoming')
+    directory = os.path.join(config.get('General', 'data_dir'), 'incoming')
     tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
 
     if is_data_suspicious(event_list):
         logger.debug('Event list marked as suspicious.')
-        dir = os.path.join(config.get('General', 'data_dir'), 'suspicious')
+        directory = os.path.join(config.get('General', 'data_dir'), 'suspicious')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
-    logger.debug('Filename: %s' % file.name)
-    data = {'station_id': station_id, 'cluster': cluster,
-            'event_list': event_list}
+    logger.debug(f'Filename: {file.name}')
+    data = {'station_id': station_id, 'cluster': cluster, 'event_list': event_list}
     pickle.dump(data, file)
     file.close()
 
-    shutil.move(file.name, dir)
+    shutil.move(file.name, directory)
 
 
 def is_data_suspicious(event_list):
@@ -194,11 +188,11 @@ def is_data_suspicious(event_list):
 def decode_object(o):
     """recursively decode all bytestrings in object"""
 
-    if type(o) is bytes:
+    if isinstance(o, bytes):
         return o.decode()
-    elif type(o) is dict:
-        return {decode_object(k): decode_object(v) for k, v in o.items()}
-    elif type(o) is list:
+    elif isinstance(o, dict):
+        return {decode_object(key): decode_object(value) for key, value in o.items()}
+    elif isinstance(o, list):
         return [decode_object(obj) for obj in o]
     else:
         return o

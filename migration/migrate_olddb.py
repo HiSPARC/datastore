@@ -1,35 +1,35 @@
-""" Migrate old database data to the datastore
+"""Migrate old database data to the datastore
 
-    This module will migrate all available data in the original database
-    to our new datastore using the regular datastore workflow.  That means
-    that we won't circumvent the usual upload / writer cycle.  This module
-    will download data from the old database and write files to the
-    'incoming' directory, in effect becoming an uploader by itself.  The
-    writer will then pick up the data files and store them in the
-    datastore.
+This module will migrate all available data in the original database
+to our new datastore using the regular datastore workflow.  That means
+that we won't circumvent the usual upload / writer cycle.  This module
+will download data from the old database and write files to the
+'incoming' directory, in effect becoming an uploader by itself.  The
+writer will then pick up the data files and store them in the
+datastore.
 
 """
-import logging
-import MySQLdb
-import datetime
-import tempfile
-import os
-import shutil
-import cPickle as pickle
-import zlib
+
 import base64
 import csv
+import logging
+import os
+import pickle
 import re
+import shutil
+import tempfile
+import zlib
 
-from settings import *
+import MySQLdb
+import settings
+
 
 class Database:
     def __init__(self):
         self.open()
 
     def open(self):
-        self.db = MySQLdb.connect(host=OLDDB_HOST, user=OLDDB_USER,
-                                  db=OLDDB_DB, port=OLDDB_PORT)
+        self.db = MySQLdb.connect(**settings.OLD_DATABASE)
 
     def close(self):
         self.db.close()
@@ -45,36 +45,39 @@ def migrate():
     clusters = read_station_list()
     olddb = Database()
 
-    logger.info("Starting migration of all data...")
+    logger.info('Starting migration of all data...')
     for table in get_data_tables(olddb):
         station = int(re.search('events([0-9]+)', table).group(1))
 
         # strange tables, don't migrate
-        if station == 0 or station == 30 or station == 97:
+        if station in [0, 30, 97]:
             continue
         # removed stations (5001 = Sudan)
         if station == 5001:
             continue
 
         migrate_data(olddb, status, table, station, clusters)
-    logger.info("Migrating all data finished succesfully.")
+    logger.info('Migrating all data finished succesfully.')
+
 
 def read_migration_status():
     """Read migration status from file"""
 
     try:
-        with open(OLDDB_STATUS, 'r') as file:
+        with open(settings.OLDDB_STATUS) as file:
             status = pickle.load(file)
-    except IOError:
+    except OSError:
         status = {}
 
     return status
 
+
 def write_migration_status(status):
     """Write migration status to file"""
 
-    with open(OLDDB_STATUS, 'w') as file:
+    with open(settings.OLDDB_STATUS, 'w') as file:
         pickle.dump(status, file)
+
 
 def get_data_tables(database):
     """Get all tables containing event data"""
@@ -84,11 +87,12 @@ def get_data_tables(database):
 
     return [x[0] for x in results]
 
+
 def read_station_list():
     """Read station, cluster combinations from file"""
 
     station_list = {}
-    with open(STATION_LIST, 'r') as file:
+    with open(settings.STATION_LIST) as file:
         reader = csv.reader(file)
         for station in reader:
             if station:
@@ -97,38 +101,41 @@ def read_station_list():
                 station_list[num] = cluster
     return station_list
 
+
 def migrate_data(database, status, table, station, clusters):
     """Migrate one data table"""
 
     if status.has_key(table):
         return
     else:
-        logger.info("Migrating table %s" % table)
+        logger.info(f'Migrating table {table}')
         status[table] = True
         events = get_events(database, table)
         events = process_events(events, station)
         store_events(events, station, clusters)
         write_migration_status(status)
-        logger.info("Done.")
+        logger.info('Done.')
+
 
 def get_events(database, table):
     """Get data from event table"""
 
-    sql = ("SELECT trace1, trace2, rawPulseHeight1, rawPulseHeight2, "
-           "rawIntegral1, rawIntegral2, rawBaseline1, rawBaseline2, "
-           "rawNumPeaks1, rawNumPeaks2, trigDateTime, trigNanoSec FROM %s"
-           % table)
+    sql = (
+        'SELECT trace1, trace2, rawPulseHeight1, rawPulseHeight2, '
+        'rawIntegral1, rawIntegral2, rawBaseline1, rawBaseline2, '
+        'rawNumPeaks1, rawNumPeaks2, trigDateTime, trigNanoSec FROM %s' % table
+    )
     results = execute_and_results(database, sql)
 
     return results
+
 
 def process_events(raw_events, station):
     """Build an event structure from supplied events"""
 
     events = []
     for event in raw_events:
-        (tr1, tr2, ph1, ph2, in1, in2, bl1, bl2, np1, np2, trigdt,
-         trigns) = event
+        (tr1, tr2, ph1, ph2, in1, in2, bl1, bl2, np1, np2, trigdt, trigns) = event
 
         datalist = {}
 
@@ -156,15 +163,17 @@ def process_events(raw_events, station):
             add_data(datalist, 'NP3', np1)
             add_data(datalist, 'NP4', np2)
 
-        datalist = [{'data_uploadcode': x[0], 'data': x[1]} for x in
-                    datalist.items()]
+        datalist = [{'data_uploadcode': x[0], 'data': x[1]} for x in datalist.items()]
 
-        events.append({'header': {'datetime': trigdt,
-                                  'nanoseconds': trigns,
-                       'eventtype_uploadcode': 'CIC'},
-                       'datalist': datalist})
+        events.append(
+            {
+                'header': {'datetime': trigdt, 'nanoseconds': trigns, 'eventtype_uploadcode': 'CIC'},
+                'datalist': datalist,
+            },
+        )
 
     return events
+
 
 def add_data(datalist, key, value):
     """Add a key to the datalist if the value is meaningful"""
@@ -174,23 +183,24 @@ def add_data(datalist, key, value):
             value = base64.encodestring(zlib.compress(value))
         datalist[key] = value
 
+
 def store_events(event_list, station, clusters):
     """Store an event batch in the datastore incoming directory"""
 
-    if station in renumbered_stations:
-        station = renumbered_stations[station]
+    if station in settings.renumbered_stations:
+        station = settings.renumbered_stations[station]
     cluster = clusters[station]
 
-    dir = os.path.join(DATASTORE_PATH, 'incoming')
-    tmp_dir = os.path.join(DATASTORE_PATH, 'tmp')
+    directory = os.path.join(settings.DATASTORE_PATH, 'incoming')
+    tmp_dir = os.path.join(settings.DATASTORE_PATH, 'tmp')
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
-    data = {'station_id': station, 'cluster': cluster,
-            'event_list': event_list}
+    data = {'station_id': station, 'cluster': cluster, 'event_list': event_list}
     pickle.dump(data, file)
     file.close()
 
-    shutil.move(file.name, dir)
+    shutil.move(file.name, directory)
+
 
 def execute_and_results(eventwarehouse, sql, *args):
     """Execute query and return results"""

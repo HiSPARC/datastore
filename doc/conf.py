@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
-# HiSPARC-datastore documentation build configuration file, created by
-# sphinx-quickstart on Wed May 10 10:11:52 2017.
+# HiSPARC-datastore documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -19,30 +17,22 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- General configuration ------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
-
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode', 'sphinx.ext.githubpages']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
 
 # The master toctree document.
@@ -88,12 +78,6 @@ todo_include_todos = False
 #
 html_theme = 'nature'
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#
-# html_theme_options = {}
-
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 html_logo = 'logo/header.png'
@@ -118,32 +102,22 @@ htmlhelp_basename = 'HiSPARC-datastoredoc'
 def setup(app):
     app.add_css_file('hisparc_style.css')
 
+
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
+latex_elements = {}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'HiSPARC-datastore.tex', 'HiSPARC-datastore Documentation',
-     'David Fokkema, Arne de Laat, Tom Kooij', 'manual'),
+    (
+        master_doc,
+        'HiSPARC-datastore.tex',
+        'HiSPARC-datastore Documentation',
+        'David Fokkema, Arne de Laat, Tom Kooij',
+        'manual',
+    ),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -151,14 +125,18 @@ latex_documents = [
 latex_logo = 'logo/logo.pdf'
 
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'hisparc-datastore', 'HiSPARC-datastore Documentation',
-     [author], 1)
+    (
+        master_doc,
+        'hisparc-datastore',
+        'HiSPARC-datastore Documentation',
+        [author],
+        1,
+    ),
 ]
 
 
@@ -168,7 +146,13 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'HiSPARC-datastore', 'HiSPARC-datastore Documentation',
-     author, 'HiSPARC-datastore', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        'HiSPARC-datastore',
+        'HiSPARC-datastore Documentation',
+        author,
+        'HiSPARC-datastore',
+        'One line description of project.',
+        'Miscellaneous',
+    ),
 ]
