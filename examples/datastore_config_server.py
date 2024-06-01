@@ -20,7 +20,7 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 HASH = '/tmp/hash_datastore'
 DATASTORE_CFG = '/databases/frome/station_list.csv'
-CFG_URL = 'http://192.168.99.11/config/datastore'
+CFG_URL = 'https://data.hisparc.nl/config/datastore'
 DATASTORE_XMLRPC_SERVER = ('192.168.99.13', 8001)
 RELOAD_PATH = '/tmp/uwsgi-reload.me'
 
