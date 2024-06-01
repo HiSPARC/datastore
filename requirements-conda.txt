@@ -1,1 +1,1 @@
-pytables
+pytables==3.7.0
