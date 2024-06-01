@@ -1,6 +1,5 @@
 Acceptance test for a datastore VM
 
-
 Prerequisites:
  - A datastore VM
  - A collection of pickles uploaded by a real station and a matching
@@ -8,14 +7,13 @@ Prerequisites:
    At nikhef a full day of station 501 is available.
    The data is in the test_data/ folder.
 
+Usage:
 
- Usage:
+Prepare VM. Edit upload.py to match VM.
 
- Prepare VM. Edit upload.py to match VM.
+$ python upload.py test_data/station_99
 
- $ python upload.py test_data/station_99
+Wait for the writer to finish on the VM. Copy the 2017_3_2.h5 datastore file
+to the folder that contains `expected_2017_3_2.h5`
 
- Wait for the writer to finish on the VM. Copy the 2017_3_2.h5 datastore file
- to the folder that contains `expected_2017_3_2.h5`
-
- $ python compare.py
+$ python compare.py

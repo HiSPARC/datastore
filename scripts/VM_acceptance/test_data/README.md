@@ -2,8 +2,6 @@ This dataset is (very) large: About 200 Mb LZMA compressed.
 It is not committed to our git repositories. At Nikhef, it can be found at:
 /data/hisparc/datastore_acceptance_test/
 
-
-
 This is real data from station 501 captured on March 2nd, 2017.
 The data is renumber to station 99 to prevent problems if it accidentally gets
 uploaded to the real datastore.
