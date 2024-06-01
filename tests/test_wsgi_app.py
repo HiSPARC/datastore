@@ -45,8 +45,10 @@ def import_wsgi_app():
     return functools.partial(wsgi_app.application, configfile=CONFIGFILE)
 
 
-def get_wsgi_app(wsgi_app=import_wsgi_app()):
+def get_wsgi_app(wsgi_app=None):
     """return the WSGI application"""
+    if wsgi_app is None:
+        wsgi_app = import_wsgi_app()
     return wsgi_app
 
 

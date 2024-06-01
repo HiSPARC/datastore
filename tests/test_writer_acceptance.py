@@ -141,7 +141,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
 
     def read_table(self, table):
         path = os.path.join(DATASTORE_PATH, self.filepath)
-        table_path = '/hisparc/cluster_%s/station_%s/%s' % (self.cluster, self.station_id, table)
+        table_path = f'/hisparc/cluster_{self.cluster}/station_{self.station_id}/{table}'
         with tables.open_file(path, 'r') as datafile:
             t = datafile.get_node(table_path)
             data = t.read()

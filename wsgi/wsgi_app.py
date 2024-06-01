@@ -1,6 +1,5 @@
 import configparser
 import csv
-import datetime
 import hashlib
 import logging
 import logging.handlers
@@ -169,18 +168,16 @@ def is_data_suspicious(event_list):
     the actual birth of the universe and the reweaving of past fates into
     current events has come to hunt us and our beloved data.
 
-    Apr 7, 2019 0:00 is the default time after a cold start without GPS signal.
+    Note: Apr 7, 2019 0:00 is the default time after a cold start without GPS signal.
     The DAQ will happily send events even when no GPS signal has been
     acquired (yet). Events with timestamp Apr 7, 2019 are most probably caused
     by no or bad GPS signal. Such events must be eigenstates of suspiciousness.
 
     """
+    minimum_year = 2020
     for event in event_list:
-        if event['header']['datetime'].year < 2019:
-            logger.debug('Date < 2019: Timestamp has high suspiciousness.')
-            return True
-        if event['header']['datetime'].date() == datetime.date(2019, 4, 7):
-            logger.debug('Date == Apr 7, 2019: No GPS signal?')
+        if event['header']['datetime'].year < minimum_year:
+            logger.debug('Date < 2020: Timestamp has high suspiciousness.')
             return True
     return False
 
