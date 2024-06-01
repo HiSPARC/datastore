@@ -1,6 +1,12 @@
 [tool.ruff]
 line-length = 120
 target-version = 'py310'
+extend-exclude = [
+    'doc/',
+    'examples/',
+    'migration/',
+    'scripts/',
+]
 
 [tool.ruff.format]
 quote-style = 'single'
@@ -13,6 +19,7 @@ ignore = [
     'D',  # Ignore docstring checks
     'G004',  # Allow f-string in logging
     'INP001',  # Allow scripts in implicit namespaces
+    'PERF203',  # Allow try-except in loop
     'PLR0912',  # Allow functions with many branches
     'PT',  # Not using pytest
     'PTH',  # Still using os.path
@@ -23,11 +30,12 @@ ignore = [
     'S324',  # Allow usage of md5
     'SIM108',  # No need for ternary operator
     'SLF001',  # Allow using private members
-]
+    'TRY400',  # Allow logging.error instead of logging.exception
 
-[tool.ruff.lint.per-file-ignores]
-'migration/*.py' = ['T201']  # Allow printing
-'scripts/*.py' = ['T201']  # Allow printing
+    # TODO: Consider improvements so these are no longer needed
+    'B018',  # Checking if global is defined
+    'PLW0603',  # Using globals for config and station_list
+]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = 'single'
