@@ -177,7 +177,7 @@ eventtype_upload_codes = {
         'WCG_STATION_ID': 'station_id',
         'WCG_DATABASE_NAME': 'database_name',
         'WCG_HELP_URL': 'help_url',
-        'WCG_DAQ_MODE': 'daq_mod',
+        'WCG_DAQ_MODE': 'daq_mode',
         'WCG_LATITUDE': 'latitude',
         'WCG_LONGITUDE': 'longitude',
         'WCG_ALTITUDE': 'altitude',
