@@ -111,6 +111,7 @@ def data_is_blob(uploadcode, blob_types):
 def store_event_list(data_dir, station_id, cluster, event_list):
     """Store a list of events"""
 
+    minimum_year = 2020
     prev_date = None
     datafile = None
     for event in event_list:
@@ -118,6 +119,9 @@ def store_event_list(data_dir, station_id, cluster, event_list):
             timestamp = event['header']['datetime']
             if timestamp:
                 date = timestamp.date()
+                if date.year < minimum_year:
+                    logger.error(f'Old event ({date}), discarding event (station: {station_id})')
+                    continue
                 if date != prev_date:
                     if datafile:
                         datafile.close()
