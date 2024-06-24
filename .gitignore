@@ -1,12 +1,7 @@
 # Specific
-.remote-sync.json
-station_list.csv
-config.ini
-writer_app.py
 *.h5
 _build/
 build/
-
 
 # Python
 *.pyc
