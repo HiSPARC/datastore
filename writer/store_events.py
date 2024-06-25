@@ -7,6 +7,8 @@ from writer.upload_codes import eventtype_upload_codes
 
 logger = logging.getLogger('writer.store_events')
 
+MINIMUM_YEAR = 2020
+
 
 def store_event(datafile, cluster, station_id, event):
     """Stores an event in the h5 filesystem
@@ -111,7 +113,6 @@ def data_is_blob(uploadcode, blob_types):
 def store_event_list(data_dir, station_id, cluster, event_list):
     """Store a list of events"""
 
-    minimum_year = 2020
     prev_date = None
     datafile = None
     for event in event_list:
@@ -119,7 +120,7 @@ def store_event_list(data_dir, station_id, cluster, event_list):
             timestamp = event['header']['datetime']
             if timestamp:
                 date = timestamp.date()
-                if date.year < minimum_year:
+                if date.year < MINIMUM_YEAR:
                     logger.error(f'Old event ({date}), discarding event (station: {station_id})')
                     continue
                 if date != prev_date:

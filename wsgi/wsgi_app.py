@@ -22,6 +22,8 @@ LEVELS = {
 logger = logging.getLogger('wsgi_app')
 formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d].%(funcName)s.%(levelname)s: %(message)s')
 
+MINIMUM_YEAR = 2020
+
 
 def application(environ, start_response, configfile):
     """The hisparc upload application
@@ -174,9 +176,8 @@ def is_data_suspicious(event_list):
     by no or bad GPS signal. Such events must be eigenstates of suspiciousness.
 
     """
-    minimum_year = 2020
     for event in event_list:
-        if event['header']['datetime'].year < minimum_year:
+        if event['header']['datetime'].year < MINIMUM_YEAR:
             logger.debug('Date < 2020: Timestamp has high suspiciousness.')
             return True
     return False

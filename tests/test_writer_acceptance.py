@@ -1,52 +1,39 @@
-"""
-Acceptance tests for the writer
+"""Acceptance tests for the writer
 
-python 3
+Check with data pickled by Python 2 and 3.
+
 """
 
 import base64
 import configparser
-import os
 import shutil
-import sys
 import unittest
+
+from pathlib import Path
+from unittest import mock
 
 import tables
 
 from numpy import array
 from numpy.testing import assert_array_equal
 
-self_path = os.path.dirname(__file__)
-test_data_path = os.path.join(self_path, 'test_data/')
+from writer import writer_app
 
-# configuration:
-WRITER_PATH = os.path.join(self_path, '../')
-DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
-CONFIGFILE = os.path.join(test_data_path, 'config.ini')
+self_path = Path(__file__).parent
+test_data_path = self_path / 'test_data'
 
-CONFIG = f"""
-[General]
-log=hisparc.log
-loglevel=debug
-station_list={DATASTORE_PATH}/station_list.csv
-data_dir={DATASTORE_PATH}
-"""
-
-with open(CONFIGFILE, 'w') as f:
-    f.write(CONFIG)
-
+# Configuration
+DATASTORE_PATH = self_path / 'fake_datastore'
+CONFIGFILE = test_data_path / 'config.ini'
 STATION_ID = 99
 CLUSTER = 'amsterdam'
 
 UPLOAD_CODES = ['CIC', 'SIN', 'WTR', 'CFG']
-pickle_data_path = os.path.join(test_data_path, 'incoming_writer/')
+PICKLE_DATA_PATH = test_data_path / 'incoming_writer'
 
 
-def import_writer_app():
-    """import the writer"""
-    sys.path.append(WRITER_PATH)
-    from writer import writer_app
-
+def configure_writer_app():
+    """configure the writer"""
     writer_app.config = configparser.ConfigParser()
     writer_app.config.read(CONFIGFILE)
     return writer_app
@@ -54,11 +41,12 @@ def import_writer_app():
 
 def get_writer_app(writer_app=None):
     """return the WSGI application"""
-    if writer_app is None:
-        writer_app = import_writer_app()
+    if not hasattr(writer_app, 'config'):
+        writer_app = configure_writer_app()
     return writer_app
 
 
+@mock.patch('writer.store_events.MINIMUM_YEAR', 2016)
 class TestWriterAcceptancePy2Pickles(unittest.TestCase):
     """Acceptance tests for python 2 pickles"""
 
@@ -69,15 +57,13 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.station_id = STATION_ID
         self.cluster = CLUSTER
         self.filepath = '2017/2/2017_2_26.h5'
-        self.pickle_filename = {}
-        for upload_code in UPLOAD_CODES:
-            self.pickle_filename[upload_code] = os.path.join(
-                pickle_data_path,
-                f'writer_{self.pickle_version}_{upload_code}',
-            )
+        self.pickle_filename = {
+            upload_code: PICKLE_DATA_PATH / f'writer_{self.pickle_version}_{upload_code}'
+            for upload_code in UPLOAD_CODES
+        }
 
     def tearDown(self):
-        self.clean_datastore()
+        shutil.rmtree(DATASTORE_PATH / '2017')
 
     def test_event_acceptance(self):
         self.writer_app.process_data(self.pickle_filename['CIC'])
@@ -140,16 +126,13 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.assertEqual(blobs[1], b'Hardware: 0 FPGA: 0')
 
     def read_table(self, table):
-        path = os.path.join(DATASTORE_PATH, self.filepath)
+        path = DATASTORE_PATH / self.filepath
         table_path = f'/hisparc/cluster_{self.cluster}/station_{self.station_id}/{table}'
         with tables.open_file(path, 'r') as datafile:
             t = datafile.get_node(table_path)
             data = t.read()
 
         return data
-
-    def clean_datastore(self):
-        shutil.rmtree(os.path.join(DATASTORE_PATH, '2017'))
 
 
 class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):
