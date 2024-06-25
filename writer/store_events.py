@@ -7,6 +7,8 @@ from writer.upload_codes import eventtype_upload_codes
 
 logger = logging.getLogger('writer.store_events')
 
+MINIMUM_YEAR = 2020
+
 
 def store_event(datafile, cluster, station_id, event):
     """Stores an event in the h5 filesystem
@@ -38,7 +40,7 @@ def store_event(datafile, cluster, station_id, event):
     nanoseconds = eventheader['nanoseconds']
     # make an extended timestamp, which is the number of nanoseconds since
     # epoch
-    ext_timestamp = timestamp * int(1e9) + nanoseconds
+    ext_timestamp = timestamp * 1_000_000_000 + nanoseconds
     row['timestamp'] = timestamp
 
     if upload_codes['_has_ext_time']:
@@ -118,6 +120,9 @@ def store_event_list(data_dir, station_id, cluster, event_list):
             timestamp = event['header']['datetime']
             if timestamp:
                 date = timestamp.date()
+                if date.year < MINIMUM_YEAR:
+                    logger.error(f'Old event ({date}), discarding event (station: {station_id})')
+                    continue
                 if date != prev_date:
                     if datafile:
                         datafile.close()

@@ -3,7 +3,7 @@ test: unittests linttest doctest
 
 .PHONY: unittests
 unittests:
-	coverage run -m unittest discover tests -v
+	coverage run -m unittest -v
 	coverage report
 
 .PHONY: linttest

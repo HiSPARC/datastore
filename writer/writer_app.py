@@ -1,28 +1,30 @@
-""" datastore writer application
+"""datastore writer application
 
-    This module empties the station data `incoming` queue and writes the
-    data into HDF5 files using PyTables.
+This module empties the station data `incoming` queue and writes the
+data into HDF5 files using PyTables.
 
 """
+
 import configparser
 import logging
 import logging.handlers
 import os
-import pickle as pickle
+import pickle
 import shutil
 import time
 
 from writer.store_events import store_event_list
 
-LEVELS = {'debug': logging.DEBUG,
-          'info': logging.INFO,
-          'warning': logging.WARNING,
-          'error': logging.ERROR,
-          'critical': logging.CRITICAL}
+LEVELS = {
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL,
+}
 
 logger = logging.getLogger('writer')
-formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d]'
-                              '.%(funcName)s.%(levelname)s: %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)s[%(process)d].%(funcName)s.%(levelname)s: %(message)s')
 
 
 def writer(configfile):
@@ -45,17 +47,14 @@ def writer(configfile):
 
     # set up logger
     file = config.get('General', 'log') + '-writer'
-    handler = logging.handlers.TimedRotatingFileHandler(file,
-                                                        when='midnight',
-                                                        backupCount=14)
+    handler = logging.handlers.TimedRotatingFileHandler(file, when='midnight', backupCount=14)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
     logger.setLevel(level=level)
 
     queue = os.path.join(config.get('General', 'data_dir'), 'incoming')
-    partial_queue = os.path.join(config.get('General', 'data_dir'),
-                                 'partial')
+    partial_queue = os.path.join(config.get('General', 'data_dir'), 'partial')
 
     # writer process
     try:
@@ -85,19 +84,18 @@ def process_data(file):
             logger.debug('Data seems to be pickled using python 2. Decoding.')
             data = decode_object(pickle.load(handle, encoding='bytes'))
 
-    logger.debug('Processing data for station %d' % data['station_id'])
-    store_event_list(config.get('General', 'data_dir'),
-                     data['station_id'], data['cluster'], data['event_list'])
+    logger.debug(f"Processing data for station {data['station_id']}")
+    store_event_list(config.get('General', 'data_dir'), data['station_id'], data['cluster'], data['event_list'])
 
 
 def decode_object(o):
     """recursively decode all bytestrings in object"""
 
-    if type(o) is bytes:
+    if isinstance(o, bytes):
         return o.decode()
-    elif type(o) is dict:
+    elif isinstance(o, dict):
         return {decode_object(k): decode_object(v) for k, v in o.items()}
-    elif type(o) is list:
+    elif isinstance(o, list):
         return [decode_object(obj) for obj in o]
     else:
         return o

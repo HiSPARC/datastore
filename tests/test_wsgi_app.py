@@ -1,46 +1,35 @@
 """Acceptance tests for the datastore WSGI app"""
 
 import functools
-import glob
 import hashlib
-import os
 import pickle
-import sys
 import unittest
+
+from http import HTTPStatus
+from pathlib import Path
+from unittest import mock
 
 from webtest import TestApp
 
-self_path = os.path.dirname(__file__)
-test_data_path = os.path.join(self_path, 'test_data/')
+from wsgi import wsgi_app
+
+self_path = Path(__file__).parent
+test_data_path = self_path / 'test_data'
 
 # configuration:
-WSGI_APP_PATH = os.path.join(self_path, '../')
-DATASTORE_PATH = os.path.join(self_path, 'fake_datastore')
-CONFIGFILE = os.path.join(test_data_path, 'config.ini')
-
-CONFIG = f"""
-[General]
-log=hisparc.log
-loglevel=debug
-station_list={DATASTORE_PATH}/station_list.csv
-data_dir={DATASTORE_PATH}
-"""
-
-with open(CONFIGFILE, 'w') as f:
-    f.write(CONFIG)
+DATASTORE_PATH = self_path / 'fake_datastore'
+CONFIGFILE = test_data_path / 'config.ini'
 
 STATION_ID = 99
 PASSWORD = 'fake_station'
 
-EVENTPY2 = os.path.join(test_data_path, 'incoming_http/py2_s510_100events')
-EVENTPY3 = os.path.join(test_data_path, 'incoming_http/py3event')
-EVENTSUS = os.path.join(test_data_path, 'incoming_http/suspicious_event')
+EVENTPY2 = test_data_path / 'incoming_http/py2_s510_100events'
+EVENTPY3 = test_data_path / 'incoming_http/py3event'
+EVENTSUS = test_data_path / 'incoming_http/suspicious_event'
 
 
-def import_wsgi_app():
+def configure_wsgi_app():
     """import the WSGI application"""
-    sys.path.append(WSGI_APP_PATH)
-    from wsgi import wsgi_app
 
     return functools.partial(wsgi_app.application, configfile=CONFIGFILE)
 
@@ -48,10 +37,11 @@ def import_wsgi_app():
 def get_wsgi_app(wsgi_app=None):
     """return the WSGI application"""
     if wsgi_app is None:
-        wsgi_app = import_wsgi_app()
+        wsgi_app = configure_wsgi_app()
     return wsgi_app
 
 
+@mock.patch('wsgi.wsgi_app.MINIMUM_YEAR', 2016)
 class TestWsgiAppAcceptance(unittest.TestCase):
     def setUp(self):
         self.station_id = STATION_ID
@@ -64,6 +54,7 @@ class TestWsgiAppAcceptance(unittest.TestCase):
     def test_invalid_post_data(self):
         resp = self.app.post('/', {})
         self.assertEqual(resp.body, b'400')  # invalid post data
+        self.assertEqual(resp.status_code, HTTPStatus.OK)
         self.assert_num_files_in_datastore(incoming=0, suspicious=0)
 
     def test_unpickling_error(self):
@@ -136,30 +127,28 @@ class TestWsgiAppAcceptance(unittest.TestCase):
         }
 
         response = self.app.post('/', data)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         return response.body
 
     def read_pickle(self, fn):
-        with open(fn, 'rb') as f:
-            pickle = f.read()
-        return pickle
+        event = fn.read_bytes()
+        return event
 
-    def files_in_folder(self, folder):
-        return glob.glob(folder + '/*')
+    def files_in_folder(self, path):
+        return [file for file in path.iterdir() if file.name != '.keep']
 
     def clean_datastore(self):
-        for folder in ['incoming', 'tmp', 'suspicious']:
-            for fn in self.files_in_folder(os.path.join(DATASTORE_PATH, folder)):
-                os.remove(fn)
+        for folder in ['incoming', 'tmp', 'suspicious', 'logs']:
+            for filepath in self.files_in_folder(DATASTORE_PATH / folder):
+                filepath.unlink()
 
-    def assert_num_files_in_datastore(self, incoming=None, suspicious=None):
-        self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'tmp'))), 0)
-        if incoming is not None:
-            self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))), incoming)
-        if suspicious is not None:
-            self.assertEqual(len(self.files_in_folder(os.path.join(DATASTORE_PATH, 'suspicious'))), suspicious)
+    def assert_num_files_in_datastore(self, incoming=0, suspicious=0):
+        self.assertEqual(len(self.files_in_folder(DATASTORE_PATH / 'tmp')), 0)
+        self.assertEqual(len(self.files_in_folder(DATASTORE_PATH / 'incoming')), incoming)
+        self.assertEqual(len(self.files_in_folder(DATASTORE_PATH / 'suspicious')), suspicious)
 
     def assert_num_events_written(self, number_of_events):
-        fn = self.files_in_folder(os.path.join(DATASTORE_PATH, 'incoming'))[0]
+        fn = self.files_in_folder(DATASTORE_PATH / 'incoming')[0]
         with open(fn, 'rb') as f:
             data = pickle.load(f)
         written_event_list = data['event_list']
