@@ -1,7 +1,5 @@
 """Storage docstrings"""
 
-import os
-
 import tables
 
 
@@ -276,12 +274,11 @@ def open_or_create_file(data_dir, date):
     :param date: the event date
 
     """
-    directory = os.path.join(data_dir, '%d/%d' % (date.year, date.month))
-    file = os.path.join(directory, '%d_%d_%d.h5' % (date.year, date.month, date.day))
+    directory = data_dir / f'{date.year}/{date.month}'
+    file = directory / f'{date.year}_{date.month}_{date.day}.h5'
 
-    if not os.path.exists(directory):
-        # create dir and parent dirs with mode rwxr-xr-x
-        os.makedirs(directory, 0o755)
+    # Ensure dir and parent directories exist with mode rwxr-xr-x
+    directory.mkdir(mode=0o755, parents=True, exists_ok=True)
 
     return tables.open_file(file, 'a')
 
