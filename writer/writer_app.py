@@ -54,7 +54,7 @@ def writer(configfile):
     logger.setLevel(level=level)
 
     data_dir = Path(config.get('General', 'data_dir'))
-    queue = data_dir /  'incoming'
+    queue = data_dir / 'incoming'
     partial_queue = data_dir / 'partial'
 
     sleep_duration = config.getint('Writer', 'sleep')
