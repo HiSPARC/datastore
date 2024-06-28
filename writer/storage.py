@@ -278,7 +278,7 @@ def open_or_create_file(data_dir, date):
     file = directory / f'{date.year}_{date.month}_{date.day}.h5'
 
     # Ensure dir and parent directories exist with mode rwxr-xr-x
-    directory.mkdir(mode=0o755, parents=True, exists_ok=True)
+    directory.mkdir(mode=0o755, parents=True, exist_ok=True)
 
     return tables.open_file(file, 'a')
 
