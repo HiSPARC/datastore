@@ -153,7 +153,3 @@ class TestWsgiAppAcceptance(unittest.TestCase):
             data = pickle.load(file_handle)
         written_event_list = data['event_list']
         self.assertEqual(len(written_event_list), number_of_events)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -139,7 +139,3 @@ class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):
     """Acceptance tests for python 3 pickles"""
 
     pickle_version = 'py3'
-
-
-if __name__ == '__main__':
-    unittest.main()
