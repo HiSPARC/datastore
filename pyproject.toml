@@ -56,3 +56,8 @@ source = [
     'writer',
     'wsgi',
 ]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+skip_covered = true
