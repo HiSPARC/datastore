@@ -66,7 +66,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         shutil.rmtree(DATASTORE_PATH / '2017')
 
     def test_event_acceptance(self):
-        self.writer_app.process_data(self.pickle_filename['CIC'])
+        self.writer_app.process_data(self.pickle_filename['CIC'], DATASTORE_PATH)
 
         data = self.read_table('events')
         self.assertEqual(data['timestamp'], 1488093964)
@@ -86,7 +86,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.assertEqual(tr1, base64.decodebytes(tr1_b64))
 
     def test_singles_acceptance(self):
-        self.writer_app.process_data(self.pickle_filename['SIN'])
+        self.writer_app.process_data(self.pickle_filename['SIN'], DATASTORE_PATH)
 
         data = self.read_table('singles')
         self.assertEqual(data['timestamp'], 1488094031)
@@ -99,7 +99,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.assertEqual(len(blobs), 0)
 
     def test_weather_acceptance(self):
-        self.writer_app.process_data(self.pickle_filename['WTR'])
+        self.writer_app.process_data(self.pickle_filename['WTR'], DATASTORE_PATH)
 
         data = self.read_table('weather')
         self.assertEqual(data['timestamp'], 1488094084)
@@ -111,7 +111,7 @@ class TestWriterAcceptancePy2Pickles(unittest.TestCase):
         self.assertEqual(len(blobs), 0)
 
     def test_config_acceptance(self):
-        self.writer_app.process_data(self.pickle_filename['CFG'])
+        self.writer_app.process_data(self.pickle_filename['CFG'], DATASTORE_PATH)
         data = self.read_table('config')
         self.assertEqual(data['timestamp'], 1488125225)
         self.assertEqual(data['mas_ch1_thres_high'], 320)
@@ -139,7 +139,3 @@ class TestWriterAcceptancePy3Pickles(TestWriterAcceptancePy2Pickles):
     """Acceptance tests for python 3 pickles"""
 
     pickle_version = 'py3'
-
-
-if __name__ == '__main__':
-    unittest.main()

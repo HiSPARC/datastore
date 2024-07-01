@@ -148,12 +148,8 @@ class TestWsgiAppAcceptance(unittest.TestCase):
         self.assertEqual(len(self.files_in_folder(DATASTORE_PATH / 'suspicious')), suspicious)
 
     def assert_num_events_written(self, number_of_events):
-        fn = self.files_in_folder(DATASTORE_PATH / 'incoming')[0]
-        with open(fn, 'rb') as f:
-            data = pickle.load(f)
+        file_path = self.files_in_folder(DATASTORE_PATH / 'incoming')[0]
+        with file_path.open('rb') as file_handle:
+            data = pickle.load(file_handle)
         written_event_list = data['event_list']
         self.assertEqual(len(written_event_list), number_of_events)
-
-
-if __name__ == '__main__':
-    unittest.main()

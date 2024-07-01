@@ -8,10 +8,10 @@ data into HDF5 files using PyTables.
 import configparser
 import logging
 import logging.handlers
-import os
 import pickle
-import shutil
 import time
+
+from pathlib import Path
 
 from writer.store_events import store_event_list
 
@@ -53,31 +53,34 @@ def writer(configfile):
     level = LEVELS.get(config.get('General', 'loglevel'), logging.NOTSET)
     logger.setLevel(level=level)
 
-    queue = os.path.join(config.get('General', 'data_dir'), 'incoming')
-    partial_queue = os.path.join(config.get('General', 'data_dir'), 'partial')
+    data_dir = Path(config.get('General', 'data_dir'))
+    queue = data_dir / 'incoming'
+    partial_queue = data_dir / 'partial'
+
+    sleep_duration = config.getint('Writer', 'sleep')
 
     # writer process
     try:
         while True:
-            entries = os.listdir(queue)
+            entries = queue.iterdir()
 
             if not entries:
-                time.sleep(config.getint('Writer', 'sleep'))
+                time.sleep(sleep_duration)
 
             for entry in entries:
-                path = os.path.join(queue, entry)
-                shutil.move(path, partial_queue)
+                partial_path = partial_queue / entry.name
+                entry.rename(partial_path)
 
-                path = os.path.join(partial_queue, entry)
-                process_data(path)
-                os.remove(path)
+                process_data(partial_path, data_dir)
+                partial_path.unlink()
+
     except Exception:
         logger.exception('Exception occured, quitting.')
 
 
-def process_data(file):
+def process_data(file, data_dir):
     """Read data from a pickled object and store store in raw datastore"""
-    with open(file, 'rb') as handle:
+    with file.open('rb') as handle:
         try:
             data = pickle.load(handle)
         except UnicodeDecodeError:
@@ -85,7 +88,7 @@ def process_data(file):
             data = decode_object(pickle.load(handle, encoding='bytes'))
 
     logger.debug(f"Processing data for station {data['station_id']}")
-    store_event_list(config.get('General', 'data_dir'), data['station_id'], data['cluster'], data['event_list'])
+    store_event_list(data_dir, data['station_id'], data['cluster'], data['event_list'])
 
 
 def decode_object(o):
