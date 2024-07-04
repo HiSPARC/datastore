@@ -9,6 +9,8 @@ import shutil
 import tempfile
 import urllib.parse
 
+from pathlib import Path
+
 from . import rcodes
 
 LEVELS = {
@@ -133,7 +135,8 @@ def do_init(configfile):
         station_list
     except NameError:
         station_list = {}
-        with open(config.get('General', 'station_list')) as file:
+        station_list_path = Path(config.get('General', 'station_list'))
+        with station_list_path.open() as file:
             reader = csv.reader(file)
             for station in reader:
                 if station:
@@ -147,12 +150,14 @@ def store_data(station_id, cluster, event_list):
 
     logger.debug(f'Storing data for station {station_id}')
 
-    directory = os.path.join(config.get('General', 'data_dir'), 'incoming')
-    tmp_dir = os.path.join(config.get('General', 'data_dir'), 'tmp')
+    data_dir = Path(config.get('General', 'data_dir'))
+
+    directory = data_dir / 'incoming'
+    tmp_dir = data_dir / 'tmp'
 
     if is_data_suspicious(event_list):
         logger.debug('Event list marked as suspicious.')
-        directory = os.path.join(config.get('General', 'data_dir'), 'suspicious')
+        directory = data_dir / 'suspicious'
 
     file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
     logger.debug(f'Filename: {file.name}')

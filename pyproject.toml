@@ -22,7 +22,6 @@ ignore = [
     'PERF203',  # Allow try-except in loop
     'PLR0912',  # Allow functions with many branches
     'PT',  # Not using pytest
-    'PTH',  # Still using os.path
     'RET',  # Allow elif/else after return
     'S101',  # Assert is used to prevent incorrect
     'S105',  # Some hardcoded test passwords
@@ -57,3 +56,8 @@ source = [
     'writer',
     'wsgi',
 ]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+skip_covered = true
