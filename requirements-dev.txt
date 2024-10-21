@@ -1,4 +1,4 @@
-coverage[toml]==7.6.3
+coverage[toml]==7.6.4
 ruff==0.6.9
 sphinx==8.0.2
 webtest==3.0.1
