@@ -159,11 +159,10 @@ def store_data(station_id, cluster, event_list):
         logger.debug('Event list marked as suspicious.')
         directory = data_dir / 'suspicious'
 
-    file = tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False)
-    logger.debug(f'Filename: {file.name}')
-    data = {'station_id': station_id, 'cluster': cluster, 'event_list': event_list}
-    pickle.dump(data, file)
-    file.close()
+    with tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False) as file:
+        logger.debug(f'Filename: {file.name}')
+        data = {'station_id': station_id, 'cluster': cluster, 'event_list': event_list}
+        pickle.dump(data, file)
 
     shutil.move(file.name, directory)
 
