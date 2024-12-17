@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>writer.store_events &#8212; HiSPARC-datastore 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hisparc_style.css?v=71c9f363" />
+    <script src="../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">writer.store_events</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for writer.store_events</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">writer</span> <span class="kn">import</span> <span class="n">storage</span>
+<span class="kn">from</span> <span class="nn">writer.upload_codes</span> <span class="kn">import</span> <span class="n">eventtype_upload_codes</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;writer.store_events&#39;</span><span class="p">)</span>
+
+<span class="n">MINIMUM_YEAR</span> <span class="o">=</span> <span class="mi">2020</span>
+
+
+<div class="viewcode-block" id="store_event">
+<a class="viewcode-back" href="../../writer.html#writer.store_events.store_event">[docs]</a>
+<span class="k">def</span> <span class="nf">store_event</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">station_id</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stores an event in the h5 filesystem</span>
+
+<span class="sd">    :param datafile: the h5 data file</span>
+<span class="sd">    :param cluster: the name of the cluster to which the station belongs</span>
+<span class="sd">    :param station_id: the id of the station this event belongs to</span>
+<span class="sd">    :param event: the event to store</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eventheader</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">]</span>
+    <span class="n">eventdatalist</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;datalist&#39;</span><span class="p">]</span>
+    <span class="n">eventtype</span> <span class="o">=</span> <span class="n">eventheader</span><span class="p">[</span><span class="s1">&#39;eventtype_uploadcode&#39;</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">upload_codes</span> <span class="o">=</span> <span class="n">eventtype_upload_codes</span><span class="p">[</span><span class="n">eventtype</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown event type: </span><span class="si">{</span><span class="n">eventtype</span><span class="si">}</span><span class="s1">, discarding event (station: </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">parentnode</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">get_or_create_station_group</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">station_id</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">get_or_create_node</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">parentnode</span><span class="p">,</span> <span class="n">upload_codes</span><span class="p">[</span><span class="s1">&#39;_tablename&#39;</span><span class="p">])</span>
+    <span class="n">blobs</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">get_or_create_node</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">parentnode</span><span class="p">,</span> <span class="s1">&#39;blobs&#39;</span><span class="p">)</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">row</span>
+    <span class="n">row</span><span class="p">[</span><span class="s1">&#39;event_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">nrows</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># make a unix-like timestamp</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">(</span><span class="n">eventheader</span><span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">utctimetuple</span><span class="p">())</span>
+    <span class="n">nanoseconds</span> <span class="o">=</span> <span class="n">eventheader</span><span class="p">[</span><span class="s1">&#39;nanoseconds&#39;</span><span class="p">]</span>
+    <span class="c1"># make an extended timestamp, which is the number of nanoseconds since</span>
+    <span class="c1"># epoch</span>
+    <span class="n">ext_timestamp</span> <span class="o">=</span> <span class="n">timestamp</span> <span class="o">*</span> <span class="mi">1_000_000_000</span> <span class="o">+</span> <span class="n">nanoseconds</span>
+    <span class="n">row</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span>
+
+    <span class="k">if</span> <span class="n">upload_codes</span><span class="p">[</span><span class="s1">&#39;_has_ext_time&#39;</span><span class="p">]:</span>
+        <span class="c1"># This is e.g. a HiSPARC coincidence or comparator message,</span>
+        <span class="c1"># extended timing information is available</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;nanoseconds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nanoseconds</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ext_timestamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ext_timestamp</span>
+
+    <span class="c1"># get default values for the data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">upload_codes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+            <span class="c1"># private meta information starts with a _ (e.g. _tablename)</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">value</span><span class="p">]</span>
+
+    <span class="c1"># process event data</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">eventdatalist</span><span class="p">:</span>
+        <span class="c1"># uploadcode: EVENTRATE, PH1, IN3, etc.</span>
+        <span class="n">uploadcode</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;data_uploadcode&#39;</span><span class="p">]</span>
+        <span class="c1"># value: actual data value</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">data_is_blob</span><span class="p">(</span><span class="n">uploadcode</span><span class="p">,</span> <span class="n">upload_codes</span><span class="p">[</span><span class="s1">&#39;_blobs&#39;</span><span class="p">]):</span>
+            <span class="c1"># data should be stored inside the blob array, ...</span>
+            <span class="k">if</span> <span class="n">uploadcode</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;TR&#39;</span><span class="p">:</span>
+                <span class="c1"># traces are base64 encoded</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">decodebytes</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;iso-8859-1&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># blobs are bytestrings</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;iso-8859-1&#39;</span><span class="p">)</span>
+            <span class="n">blobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="c1"># ... with a pointer stored in the event table</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">uploadcode</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="c1"># uploadcode: PH1, IN3, etc.</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">uploadcode</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">uploadcode</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Datatype not known on server side: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">eventtype</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">uploadcode</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="c1"># uploadcode: EVENTRATE, RED, etc.</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">uploadcode</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Datatype not known on server side: </span><span class="si">{</span><span class="n">uploadcode</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">eventtype</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="c1"># write data values to row</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">upload_codes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+            <span class="c1"># private meta information starts with a _ (e.g. _tablename)</span>
+            <span class="n">row</span><span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">()</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="n">blobs</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="data_is_blob">
+<a class="viewcode-back" href="../../writer.html#writer.store_events.data_is_blob">[docs]</a>
+<span class="k">def</span> <span class="nf">data_is_blob</span><span class="p">(</span><span class="n">uploadcode</span><span class="p">,</span> <span class="n">blob_types</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine if data is a variable length binary value (blob)&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">uploadcode</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">uploadcode</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">blob_types</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">uploadcode</span> <span class="ow">in</span> <span class="n">blob_types</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="store_event_list">
+<a class="viewcode-back" href="../../writer.html#writer.store_events.store_event_list">[docs]</a>
+<span class="k">def</span> <span class="nf">store_event_list</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">station_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">event_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store a list of events&quot;&quot;&quot;</span>
+
+    <span class="n">prev_date</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">datafile</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">event_list</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">][</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">timestamp</span><span class="p">:</span>
+                <span class="n">date</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span> <span class="o">&lt;</span> <span class="n">MINIMUM_YEAR</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Old event (</span><span class="si">{</span><span class="n">date</span><span class="si">}</span><span class="s1">), discarding event (station: </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">date</span> <span class="o">!=</span> <span class="n">prev_date</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">datafile</span><span class="p">:</span>
+                        <span class="n">datafile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">datafile</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">open_or_create_file</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">)</span>
+                    <span class="n">prev_date</span> <span class="o">=</span> <span class="n">date</span>
+                <span class="n">store_event</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">station_id</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Strange event (no timestamp!), discarding event (station: </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Cannot process event, discarding event (station: </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">datafile</span><span class="p">:</span>
+        <span class="n">datafile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/header.png" alt="Logo of HiSPARC-datastore"/>
+            </a></p>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">writer.store_events</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017, David Fokkema, Arne de Laat, Tom Kooij.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>datastore writer package &#8212; HiSPARC-datastore 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <link rel="stylesheet" type="text/css" href="_static/hisparc_style.css?v=71c9f363" />
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="XML-RPC-Server" href="xml-rpc-server.html" />
+    <link rel="prev" title="datastore WSGI app package" href="wsgi.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="xml-rpc-server.html" title="XML-RPC-Server"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="wsgi.html" title="datastore WSGI app package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">datastore writer package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-writer">
+<span id="datastore-writer-package"></span><h1>datastore writer package<a class="headerlink" href="#module-writer" title="Link to this heading">¶</a></h1>
+<p>HiSPARC datastore writer application</p>
+<p>This script polls <code class="docutils literal notranslate"><span class="pre">/datatore/frome/incoming</span></code> for incoming data written
+by the WSGI app. It then writes the data into the raw datastore.</p>
+<p>example <code class="docutils literal notranslate"><span class="pre">writer_app.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;Wrapper for the writer application&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;/var/www/wsgi-bin/datastore/&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">writer</span> <span class="kn">import</span> <span class="n">writer_app</span>
+
+<span class="n">configfile</span> <span class="o">=</span> <span class="s1">&#39;/var/www/wsgi-bin/datastore/examples/config.ini&#39;</span>
+<span class="n">writer_app</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>configuration is read from a configuation file, shared between the WSGI app
+and the writer usually <cite>config.ini</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">General</span><span class="p">]</span>
+<span class="n">log</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">hisparc</span><span class="o">.</span><span class="n">log</span>
+<span class="n">loglevel</span><span class="o">=</span><span class="n">debug</span>
+<span class="n">station_list</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">station_list</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">data_dir</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">datastore</span>
+
+<span class="p">[</span><span class="n">Writer</span><span class="p">]</span>
+<span class="n">sleep</span><span class="o">=</span><span class="mi">5</span>
+</pre></div>
+</div>
+<section id="module-writer.writer_app">
+<span id="writer-application"></span><h2>Writer application<a class="headerlink" href="#module-writer.writer_app" title="Link to this heading">¶</a></h2>
+<p>datastore writer application</p>
+<p>This module empties the station data <cite>incoming</cite> queue and writes the
+data into HDF5 files using PyTables.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.writer_app.decode_object">
+<span class="sig-prename descclassname"><span class="pre">writer.writer_app.</span></span><span class="sig-name descname"><span class="pre">decode_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/writer_app.html#decode_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.writer_app.decode_object" title="Link to this definition">¶</a></dt>
+<dd><p>recursively decode all bytestrings in object</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.writer_app.process_data">
+<span class="sig-prename descclassname"><span class="pre">writer.writer_app.</span></span><span class="sig-name descname"><span class="pre">process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/writer_app.html#process_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.writer_app.process_data" title="Link to this definition">¶</a></dt>
+<dd><p>Read data from a pickled object and store store in raw datastore</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.writer_app.writer">
+<span class="sig-prename descclassname"><span class="pre">writer.writer_app.</span></span><span class="sig-name descname"><span class="pre">writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/writer_app.html#writer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.writer_app.writer" title="Link to this definition">¶</a></dt>
+<dd><p>hisparc datastore writer application</p>
+<p>This script polls <code class="docutils literal notranslate"><span class="pre">/datatore/frome/incoming</span></code> for incoming data written
+by the WSGI app. It then store the data into the raw datastore.</p>
+<p>Configuration is read from the datastore configuation file (usually
+<cite>config.ini</cite>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">General</span><span class="p">]</span>
+<span class="n">log</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">hisparc</span><span class="o">.</span><span class="n">log</span>
+<span class="n">loglevel</span><span class="o">=</span><span class="n">debug</span>
+<span class="n">station_list</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">station_list</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">data_dir</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">datastore</span>
+
+<span class="p">[</span><span class="n">Writer</span><span class="p">]</span>
+<span class="n">sleep</span><span class="o">=</span><span class="mi">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="module-writer.storage">
+<span id="storage-classes-raw-datastore-tables"></span><h2>Storage classes - raw datastore tables<a class="headerlink" href="#module-writer.storage" title="Link to this heading">¶</a></h2>
+<p>Storage docstrings</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.HisparcComparator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">HisparcComparator</span></span><a class="headerlink" href="#writer.storage.HisparcComparator" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.HisparcComparator.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'comparator':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=5),</span> <span class="pre">'count':</span> <span class="pre">UInt16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=6),</span> <span class="pre">'device':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=4),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'ext_timestamp':</span> <span class="pre">UInt64Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=3),</span> <span class="pre">'nanoseconds':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.HisparcComparator.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.HisparcConfiguration">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">HisparcConfiguration</span></span><a class="headerlink" href="#writer.storage.HisparcConfiguration" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.HisparcConfiguration.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'buffer':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=20),</span> <span class="pre">'coinctime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=12),</span> <span class="pre">'delay_check':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=23),</span> <span class="pre">'delay_error':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=24),</span> <span class="pre">'delay_screen':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=22),</span> <span class="pre">'detnum':</span> <span class="pre">UInt16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=14),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'gps_altitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=4),</span> <span class="pre">'gps_latitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=2),</span> <span class="pre">'gps_longitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=3),</span> <span class="pre">'mas_ch1_adc_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=49),</span> <span class="pre">'mas_ch1_adc_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=50),</span> <span class="pre">'mas_ch1_comp_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=53),</span> <span class="pre">'mas_ch1_comp_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=54),</span> <span class="pre">'mas_ch1_current':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=33),</span> <span class="pre">'mas_ch1_gain_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=40),</span> <span class="pre">'mas_ch1_gain_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=39),</span> <span class="pre">'mas_ch1_inttime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=29),</span> <span class="pre">'mas_ch1_offset_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=44),</span> <span class="pre">'mas_ch1_offset_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=43),</span> <span class="pre">'mas_ch1_thres_high':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=26),</span> <span class="pre">'mas_ch1_thres_low':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=25),</span> <span class="pre">'mas_ch1_voltage':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=31),</span> <span class="pre">'mas_ch2_adc_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=51),</span> <span class="pre">'mas_ch2_adc_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=52),</span> <span class="pre">'mas_ch2_comp_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=55),</span> <span class="pre">'mas_ch2_comp_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=56),</span> <span class="pre">'mas_ch2_current':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=34),</span> <span class="pre">'mas_ch2_gain_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=42),</span> <span class="pre">'mas_ch2_gain_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=41),</span> <span class="pre">'mas_ch2_inttime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=30),</span> <span class="pre">'mas_ch2_offset_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=46),</span> <span class="pre">'mas_ch2_offset_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=45),</span> <span class="pre">'mas_ch2_thres_high':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=28),</span> <span class="pre">'mas_ch2_thres_low':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=27),</span> <span class="pre">'mas_ch2_voltage':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=32),</span> <span class="pre">'mas_common_offset':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=47),</span> <span class="pre">'mas_comp_thres_high':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=36),</span> <span class="pre">'mas_comp_thres_low':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=35),</span> <span class="pre">'mas_internal_voltage':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=48),</span> <span class="pre">'mas_max_voltage':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=37),</span> <span class="pre">'mas_reset':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=38),</span> <span class="pre">'mas_version':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=5),</span> <span class="pre">'password':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=15),</span> <span class="pre">'postcoinctime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=13),</span> <span class="pre">'precoinctime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=11),</span> <span class="pre">'reduce_data':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=19),</span> <span class="pre">'slv_ch1_adc_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=81),</span> <span class="pre">'slv_ch1_adc_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=82),</span> <span class="pre">'slv_ch1_comp_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=85),</span> <span class="pre">'slv_ch1_comp_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=86),</span> <span class="pre">'slv_ch1_current':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=65),</span> <span class="pre">'slv_ch1_gain_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=72),</span> <span class="pre">'slv_ch1_gain_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=71),</span> <span class="pre">'slv_ch1_inttime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=61),</span> <span class="pre">'slv_ch1_offset_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=76),</span> <span class="pre">'slv_ch1_offset_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=75),</span> <span class="pre">'slv_ch1_thres_high':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=58),</span> <span class="pre">'slv_ch1_thres_low':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=57),</span> <span class="pre">'slv_ch1_voltage':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=63),</span> <span class="pre">'slv_ch2_adc_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=83),</span> <span class="pre">'slv_ch2_adc_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=84),</span> <span class="pre">'slv_ch2_comp_gain':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=87),</span> <span class="pre">'slv_ch2_comp_offset':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=88),</span> <span class="pre">'slv_ch2_current':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=66),</span> <span class="pre">'slv_ch2_gain_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=74),</span> <span class="pre">'slv_ch2_gain_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=73),</span> <span class="pre">'slv_ch2_inttime':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=62),</span> <span class="pre">'slv_ch2_offset_neg':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=78),</span> <span class="pre">'slv_ch2_offset_pos':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=77),</span> <span class="pre">'slv_ch2_thres_high':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=60),</span> <span class="pre">'slv_ch2_thres_low':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=59),</span> <span class="pre">'slv_ch2_voltage':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=64),</span> <span class="pre">'slv_common_offset':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=79),</span> <span class="pre">'slv_comp_thres_high':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=68),</span> <span class="pre">'slv_comp_thres_low':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=67),</span> <span class="pre">'slv_internal_voltage':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=80),</span> <span class="pre">'slv_max_voltage':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=69),</span> <span class="pre">'slv_reset':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=70),</span> <span class="pre">'slv_version':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=6),</span> <span class="pre">'spare_bytes':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=16),</span> <span class="pre">'startmode':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=21),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1),</span> <span class="pre">'trig_and_or':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=10),</span> <span class="pre">'trig_external':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=9),</span> <span class="pre">'trig_high_signals':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=8),</span> <span class="pre">'trig_low_signals':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=7),</span> <span class="pre">'use_filter':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=17),</span> <span class="pre">'use_filter_threshold':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=18)}</span></em><a class="headerlink" href="#writer.storage.HisparcConfiguration.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.HisparcError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">HisparcError</span></span><a class="headerlink" href="#writer.storage.HisparcError" title="Link to this definition">¶</a></dt>
+<dd><p>HiSPARC Error messages tables</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.HisparcError.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'messages':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=2),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.HisparcError.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.HisparcEvent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">HisparcEvent</span></span><a class="headerlink" href="#writer.storage.HisparcEvent" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.HisparcEvent.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'baseline':</span> <span class="pre">Int16Col(shape=(4,),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=6),</span> <span class="pre">'data_reduction':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=4),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'event_rate':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=12),</span> <span class="pre">'ext_timestamp':</span> <span class="pre">UInt64Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=3),</span> <span class="pre">'integrals':</span> <span class="pre">Int32Col(shape=(4,),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=10),</span> <span class="pre">'n_peaks':</span> <span class="pre">Int16Col(shape=(4,),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=8),</span> <span class="pre">'nanoseconds':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'pulseheights':</span> <span class="pre">Int16Col(shape=(4,),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=9),</span> <span class="pre">'std_dev':</span> <span class="pre">Int16Col(shape=(4,),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=7),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1),</span> <span class="pre">'traces':</span> <span class="pre">Int32Col(shape=(4,),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=11),</span> <span class="pre">'trigger_pattern':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=5)}</span></em><a class="headerlink" href="#writer.storage.HisparcEvent.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.HisparcSatellite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">HisparcSatellite</span></span><a class="headerlink" href="#writer.storage.HisparcSatellite" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.HisparcSatellite.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'max_n':</span> <span class="pre">UInt16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=4),</span> <span class="pre">'max_signal':</span> <span class="pre">UInt16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=7),</span> <span class="pre">'mean_n':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=3),</span> <span class="pre">'mean_signal':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=6),</span> <span class="pre">'min_n':</span> <span class="pre">UInt16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'min_signal':</span> <span class="pre">UInt16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=5),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.HisparcSatellite.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.HisparcSingle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">HisparcSingle</span></span><a class="headerlink" href="#writer.storage.HisparcSingle" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.HisparcSingle.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'mas_ch1_high':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=3),</span> <span class="pre">'mas_ch1_low':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=2),</span> <span class="pre">'mas_ch2_high':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=5),</span> <span class="pre">'mas_ch2_low':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=4),</span> <span class="pre">'slv_ch1_high':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=7),</span> <span class="pre">'slv_ch1_low':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=6),</span> <span class="pre">'slv_ch2_high':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=9),</span> <span class="pre">'slv_ch2_low':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=8),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.HisparcSingle.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.LightningConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">LightningConfig</span></span><a class="headerlink" href="#writer.storage.LightningConfig" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.LightningConfig.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'altitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=10),</span> <span class="pre">'angle_correction':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=16),</span> <span class="pre">'baud_rate':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=3),</span> <span class="pre">'close_alarm_distance':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=12),</span> <span class="pre">'com_port':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'daq_mode':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=7),</span> <span class="pre">'database_name':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=5),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'help_url':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=6),</span> <span class="pre">'latitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=8),</span> <span class="pre">'longitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=9),</span> <span class="pre">'minimum_gps_speed':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=15),</span> <span class="pre">'noise_beep':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=14),</span> <span class="pre">'severe_alarm_distance':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=13),</span> <span class="pre">'squelch_seting':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=11),</span> <span class="pre">'station_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=4),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.LightningConfig.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.LightningError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">LightningError</span></span><a class="headerlink" href="#writer.storage.LightningError" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.LightningError.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'messages':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=2),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.LightningError.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.LightningEvent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">LightningEvent</span></span><a class="headerlink" href="#writer.storage.LightningEvent" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.LightningEvent.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'corr_angle':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=5),</span> <span class="pre">'corr_distance':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1),</span> <span class="pre">'uncorr_angle':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=4),</span> <span class="pre">'uncorr_distance':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=3)}</span></em><a class="headerlink" href="#writer.storage.LightningEvent.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.LightningNoise">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">LightningNoise</span></span><a class="headerlink" href="#writer.storage.LightningNoise" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.LightningNoise.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.LightningNoise.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.LightningStatus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">LightningStatus</span></span><a class="headerlink" href="#writer.storage.LightningStatus" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.LightningStatus.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'close_alarm':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=4),</span> <span class="pre">'close_rate':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'current_heading':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=6),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'sever_alarm':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=5),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1),</span> <span class="pre">'total_rate':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=3)}</span></em><a class="headerlink" href="#writer.storage.LightningStatus.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.WeatherConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">WeatherConfig</span></span><a class="headerlink" href="#writer.storage.WeatherConfig" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.WeatherConfig.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'altitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=10),</span> <span class="pre">'barometer':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=15),</span> <span class="pre">'baud_rate':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=3),</span> <span class="pre">'com_port':</span> <span class="pre">UInt8Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=2),</span> <span class="pre">'daq_mode':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=7),</span> <span class="pre">'database_name':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=5),</span> <span class="pre">'dew_point':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=23),</span> <span class="pre">'evapotranspiration':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=20),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'heat_index':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=22),</span> <span class="pre">'help_url':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=6),</span> <span class="pre">'humidity_inside':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=13),</span> <span class="pre">'humidity_outside':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=14),</span> <span class="pre">'latitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=8),</span> <span class="pre">'longitude':</span> <span class="pre">Float64Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=9),</span> <span class="pre">'offset_bar_sea_level':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=31),</span> <span class="pre">'offset_inside_humidity':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=27),</span> <span class="pre">'offset_inside_temperature':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=25),</span> <span class="pre">'offset_outside_humidity':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=28),</span> <span class="pre">'offset_outside_temperature':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=26),</span> <span class="pre">'offset_station_altitude':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=30),</span> <span class="pre">'offset_wind_direction':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=29),</span> <span class="pre">'rain_rate':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=21),</span> <span class="pre">'solar_radiation':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=18),</span> <span class="pre">'station_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=4),</span> <span class="pre">'temperature_inside':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=11),</span> <span class="pre">'temperature_outside':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=12),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1),</span> <span class="pre">'uv_index':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=19),</span> <span class="pre">'wind_chill':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=24),</span> <span class="pre">'wind_direction':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=16),</span> <span class="pre">'wind_speed':</span> <span class="pre">BoolCol(shape=(),</span> <span class="pre">dflt=False,</span> <span class="pre">pos=17)}</span></em><a class="headerlink" href="#writer.storage.WeatherConfig.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.WeatherError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">WeatherError</span></span><a class="headerlink" href="#writer.storage.WeatherError" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.WeatherError.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'messages':</span> <span class="pre">Int32Col(shape=(),</span> <span class="pre">dflt=-1,</span> <span class="pre">pos=2),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1)}</span></em><a class="headerlink" href="#writer.storage.WeatherError.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="writer.storage.WeatherEvent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">WeatherEvent</span></span><a class="headerlink" href="#writer.storage.WeatherEvent" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="writer.storage.WeatherEvent.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'barometer':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=6),</span> <span class="pre">'dew_point':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=14),</span> <span class="pre">'evapotranspiration':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=11),</span> <span class="pre">'event_id':</span> <span class="pre">UInt32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=0),</span> <span class="pre">'heat_index':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=13),</span> <span class="pre">'humidity_inside':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=4),</span> <span class="pre">'humidity_outside':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=5),</span> <span class="pre">'rain_rate':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=12),</span> <span class="pre">'solar_rad':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=9),</span> <span class="pre">'temp_inside':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=2),</span> <span class="pre">'temp_outside':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=3),</span> <span class="pre">'timestamp':</span> <span class="pre">Time32Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=1),</span> <span class="pre">'uv':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=10),</span> <span class="pre">'wind_chill':</span> <span class="pre">Float32Col(shape=(),</span> <span class="pre">dflt=0.0,</span> <span class="pre">pos=15),</span> <span class="pre">'wind_dir':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=7),</span> <span class="pre">'wind_speed':</span> <span class="pre">Int16Col(shape=(),</span> <span class="pre">dflt=0,</span> <span class="pre">pos=8)}</span></em><a class="headerlink" href="#writer.storage.WeatherEvent.columns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.storage.get_or_create_cluster_group">
+<span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">get_or_create_cluster_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#get_or_create_cluster_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.storage.get_or_create_cluster_group" title="Link to this definition">¶</a></dt>
+<dd><p>Get an existing cluster group or create a new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – the PyTables data file</p></li>
+<li><p><strong>cluster</strong> – the name of the cluster</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.storage.get_or_create_node">
+<span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">get_or_create_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#get_or_create_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.storage.get_or_create_node" title="Link to this definition">¶</a></dt>
+<dd><p>Get an existing node or create a new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – the PyTables data file</p></li>
+<li><p><strong>cluster</strong> – the parent (cluster) node</p></li>
+<li><p><strong>node</strong> – the node (e.g. events, blobs)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.storage.get_or_create_station_group">
+<span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">get_or_create_station_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#get_or_create_station_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.storage.get_or_create_station_group" title="Link to this definition">¶</a></dt>
+<dd><p>Get an existing station group or create a new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – the PyTables data file</p></li>
+<li><p><strong>cluster</strong> – the name of the cluster</p></li>
+<li><p><strong>station_id</strong> – the station number</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.storage.open_or_create_file">
+<span class="sig-prename descclassname"><span class="pre">writer.storage.</span></span><span class="sig-name descname"><span class="pre">open_or_create_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/storage.html#open_or_create_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.storage.open_or_create_file" title="Link to this definition">¶</a></dt>
+<dd><p>Open an existing file or create a new one</p>
+<p>This function opens an existing PyTables file according to the event
+date.  If the file does not yet exist, a new one is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_dir</strong> – the directory containing all data files</p></li>
+<li><p><strong>date</strong> – the event date</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-writer.store_events">
+<span id="store-events-module"></span><h2>Store events module<a class="headerlink" href="#module-writer.store_events" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.store_events.data_is_blob">
+<span class="sig-prename descclassname"><span class="pre">writer.store_events.</span></span><span class="sig-name descname"><span class="pre">data_is_blob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uploadcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blob_types</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/store_events.html#data_is_blob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.store_events.data_is_blob" title="Link to this definition">¶</a></dt>
+<dd><p>Determine if data is a variable length binary value (blob)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.store_events.store_event">
+<span class="sig-prename descclassname"><span class="pre">writer.store_events.</span></span><span class="sig-name descname"><span class="pre">store_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datafile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/store_events.html#store_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.store_events.store_event" title="Link to this definition">¶</a></dt>
+<dd><p>Stores an event in the h5 filesystem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datafile</strong> – the h5 data file</p></li>
+<li><p><strong>cluster</strong> – the name of the cluster to which the station belongs</p></li>
+<li><p><strong>station_id</strong> – the id of the station this event belongs to</p></li>
+<li><p><strong>event</strong> – the event to store</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="writer.store_events.store_event_list">
+<span class="sig-prename descclassname"><span class="pre">writer.store_events.</span></span><span class="sig-name descname"><span class="pre">store_event_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/writer/store_events.html#store_event_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#writer.store_events.store_event_list" title="Link to this definition">¶</a></dt>
+<dd><p>Store a list of events</p>
+</dd></dl>
+
+</section>
+<section id="module-writer.upload_codes">
+<span id="upload-codes"></span><h2>Upload codes<a class="headerlink" href="#module-writer.upload_codes" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/header.png" alt="Logo of HiSPARC-datastore"/>
+            </a></p>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">datastore writer package</a><ul>
+<li><a class="reference internal" href="#module-writer.writer_app">Writer application</a><ul>
+<li><a class="reference internal" href="#writer.writer_app.decode_object"><code class="docutils literal notranslate"><span class="pre">decode_object()</span></code></a></li>
+<li><a class="reference internal" href="#writer.writer_app.process_data"><code class="docutils literal notranslate"><span class="pre">process_data()</span></code></a></li>
+<li><a class="reference internal" href="#writer.writer_app.writer"><code class="docutils literal notranslate"><span class="pre">writer()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-writer.storage">Storage classes - raw datastore tables</a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcComparator"><code class="docutils literal notranslate"><span class="pre">HisparcComparator</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcComparator.columns"><code class="docutils literal notranslate"><span class="pre">HisparcComparator.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.HisparcConfiguration"><code class="docutils literal notranslate"><span class="pre">HisparcConfiguration</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcConfiguration.columns"><code class="docutils literal notranslate"><span class="pre">HisparcConfiguration.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.HisparcError"><code class="docutils literal notranslate"><span class="pre">HisparcError</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcError.columns"><code class="docutils literal notranslate"><span class="pre">HisparcError.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.HisparcEvent"><code class="docutils literal notranslate"><span class="pre">HisparcEvent</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcEvent.columns"><code class="docutils literal notranslate"><span class="pre">HisparcEvent.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.HisparcSatellite"><code class="docutils literal notranslate"><span class="pre">HisparcSatellite</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcSatellite.columns"><code class="docutils literal notranslate"><span class="pre">HisparcSatellite.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.HisparcSingle"><code class="docutils literal notranslate"><span class="pre">HisparcSingle</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.HisparcSingle.columns"><code class="docutils literal notranslate"><span class="pre">HisparcSingle.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.LightningConfig"><code class="docutils literal notranslate"><span class="pre">LightningConfig</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.LightningConfig.columns"><code class="docutils literal notranslate"><span class="pre">LightningConfig.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.LightningError"><code class="docutils literal notranslate"><span class="pre">LightningError</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.LightningError.columns"><code class="docutils literal notranslate"><span class="pre">LightningError.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.LightningEvent"><code class="docutils literal notranslate"><span class="pre">LightningEvent</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.LightningEvent.columns"><code class="docutils literal notranslate"><span class="pre">LightningEvent.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.LightningNoise"><code class="docutils literal notranslate"><span class="pre">LightningNoise</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.LightningNoise.columns"><code class="docutils literal notranslate"><span class="pre">LightningNoise.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.LightningStatus"><code class="docutils literal notranslate"><span class="pre">LightningStatus</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.LightningStatus.columns"><code class="docutils literal notranslate"><span class="pre">LightningStatus.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.WeatherConfig"><code class="docutils literal notranslate"><span class="pre">WeatherConfig</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.WeatherConfig.columns"><code class="docutils literal notranslate"><span class="pre">WeatherConfig.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.WeatherError"><code class="docutils literal notranslate"><span class="pre">WeatherError</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.WeatherError.columns"><code class="docutils literal notranslate"><span class="pre">WeatherError.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.WeatherEvent"><code class="docutils literal notranslate"><span class="pre">WeatherEvent</span></code></a><ul>
+<li><a class="reference internal" href="#writer.storage.WeatherEvent.columns"><code class="docutils literal notranslate"><span class="pre">WeatherEvent.columns</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writer.storage.get_or_create_cluster_group"><code class="docutils literal notranslate"><span class="pre">get_or_create_cluster_group()</span></code></a></li>
+<li><a class="reference internal" href="#writer.storage.get_or_create_node"><code class="docutils literal notranslate"><span class="pre">get_or_create_node()</span></code></a></li>
+<li><a class="reference internal" href="#writer.storage.get_or_create_station_group"><code class="docutils literal notranslate"><span class="pre">get_or_create_station_group()</span></code></a></li>
+<li><a class="reference internal" href="#writer.storage.open_or_create_file"><code class="docutils literal notranslate"><span class="pre">open_or_create_file()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-writer.store_events">Store events module</a><ul>
+<li><a class="reference internal" href="#writer.store_events.data_is_blob"><code class="docutils literal notranslate"><span class="pre">data_is_blob()</span></code></a></li>
+<li><a class="reference internal" href="#writer.store_events.store_event"><code class="docutils literal notranslate"><span class="pre">store_event()</span></code></a></li>
+<li><a class="reference internal" href="#writer.store_events.store_event_list"><code class="docutils literal notranslate"><span class="pre">store_event_list()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-writer.upload_codes">Upload codes</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="wsgi.html"
+                          title="previous chapter">datastore WSGI app package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="xml-rpc-server.html"
+                          title="next chapter">XML-RPC-Server</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/writer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="xml-rpc-server.html" title="XML-RPC-Server"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="wsgi.html" title="datastore WSGI app package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">datastore writer package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017, David Fokkema, Arne de Laat, Tom Kooij.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

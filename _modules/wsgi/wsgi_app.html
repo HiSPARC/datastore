@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wsgi.wsgi_app &#8212; HiSPARC-datastore 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hisparc_style.css?v=71c9f363" />
+    <script src="../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">wsgi.wsgi_app</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for wsgi.wsgi_app</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">configparser</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">logging.handlers</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">urllib.parse</span>
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">rcodes</span>
+
+<span class="n">LEVELS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;debug&#39;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+    <span class="s1">&#39;info&#39;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+    <span class="s1">&#39;warning&#39;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+    <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+    <span class="s1">&#39;critical&#39;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;wsgi_app&#39;</span><span class="p">)</span>
+<span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> </span><span class="si">%(name)s</span><span class="s1">[</span><span class="si">%(process)d</span><span class="s1">].</span><span class="si">%(funcName)s</span><span class="s1">.</span><span class="si">%(levelname)s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="n">MINIMUM_YEAR</span> <span class="o">=</span> <span class="mi">2020</span>
+
+
+<div class="viewcode-block" id="application">
+<a class="viewcode-back" href="../../wsgi.html#wsgi.wsgi_app.application">[docs]</a>
+<span class="k">def</span> <span class="nf">application</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">,</span> <span class="n">configfile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The hisparc upload application</span>
+
+<span class="sd">    This handler is called by uWSGI whenever someone requests our URL.</span>
+
+<span class="sd">    First, we generate a dictionary of POSTed variables and try to read out the</span>
+<span class="sd">    station_id, password, checksum and data. When we do a readline(), we</span>
+<span class="sd">    already read out the entire datastream. I don&#39;t know if we can first check</span>
+<span class="sd">    on station_id/password combinations before reading out the datastream</span>
+<span class="sd">    without setting up a bidirectional communication channel.</span>
+
+<span class="sd">    When the checksum matches, we unpickle the event_list and pass everything</span>
+<span class="sd">    on to store_event_list.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">do_init</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span>
+
+    <span class="c1"># start http response</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;200 OK&#39;</span>
+    <span class="n">response_headers</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)]</span>
+    <span class="n">start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">)</span>
+
+    <span class="c1"># read data from the POST variables</span>
+    <span class="n">post_input</span> <span class="o">=</span> <span class="n">environ</span><span class="p">[</span><span class="s1">&#39;wsgi.input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="n">post_data</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">parse_qs</span><span class="p">(</span><span class="n">post_input</span><span class="p">)</span>
+
+    <span class="c1"># process POST data</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">post_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="n">post_data</span><span class="p">[</span><span class="s1">&#39;checksum&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">station_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">post_data</span><span class="p">[</span><span class="s1">&#39;station_id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">post_data</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">EOFError</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;POST (vars) error&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">rcodes</span><span class="o">.</span><span class="n">RC_ISE_INV_POSTDATA</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cluster</span><span class="p">,</span> <span class="n">station_password</span> <span class="o">=</span> <span class="n">station_list</span><span class="p">[</span><span class="n">station_id</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Station </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1"> is unknown&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">rcodes</span><span class="o">.</span><span class="n">RC_PE_INV_STATIONID</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">station_password</span> <span class="o">!=</span> <span class="n">password</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Station </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">: password mismatch: </span><span class="si">{</span><span class="n">password</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">rcodes</span><span class="o">.</span><span class="n">RC_PE_INV_AUTHCODE</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">our_checksum</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;iso-8859-1&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">our_checksum</span> <span class="o">!=</span> <span class="n">checksum</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Station </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">: checksum mismatch&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">rcodes</span><span class="o">.</span><span class="n">RC_PE_INV_INPUT</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">event_list</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;iso-8859-1&#39;</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+                    <span class="c1"># string was probably pickled on python 2.</span>
+                    <span class="c1"># decode as bytes and decode all bytestrings to string.</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;UnicodeDecodeError on python 2 pickle. Decoding bytestrings.&#39;</span><span class="p">)</span>
+                    <span class="n">event_list</span> <span class="o">=</span> <span class="n">decode_object</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;iso-8859-1&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;bytes&#39;</span><span class="p">))</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">UnpicklingError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Station </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">: pickling error&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">rcodes</span><span class="o">.</span><span class="n">RC_PE_PICKLING_ERROR</span><span class="p">]</span>
+
+            <span class="n">store_data</span><span class="p">(</span><span class="n">station_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">event_list</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Station </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">: succesfully completed&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">rcodes</span><span class="o">.</span><span class="n">RC_OK</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="do_init">
+<a class="viewcode-back" href="../../wsgi.html#wsgi.wsgi_app.do_init">[docs]</a>
+<span class="k">def</span> <span class="nf">do_init</span><span class="p">(</span><span class="n">configfile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load configuration and passwords and set up a logger handler</span>
+
+<span class="sd">    This function will do one-time initialization.  By using global</span>
+<span class="sd">    variables, we eliminate the need to reread configuration and passwords</span>
+<span class="sd">    on every request.</span>
+
+<span class="sd">    Configuration is read from the datastore configuation file (usually</span>
+<span class="sd">    `config.ini`):</span>
+
+<span class="sd">    .. include:: ../examples/config.ini</span>
+<span class="sd">       :literal:</span>
+
+<span class="sd">    Station information is read from the `station_list` config variable.</span>
+<span class="sd">    (`station_list.csv` on frome)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># set up config</span>
+    <span class="k">global</span> <span class="n">config</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">config</span>
+    <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span>
+
+    <span class="c1"># set up logger</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;General&#39;</span><span class="p">,</span> <span class="s1">&#39;log&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;-wsgi.</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">TimedRotatingFileHandler</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s1">&#39;midnight&#39;</span><span class="p">,</span> <span class="n">backupCount</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;General&#39;</span><span class="p">,</span> <span class="s1">&#39;loglevel&#39;</span><span class="p">),</span> <span class="n">logging</span><span class="o">.</span><span class="n">NOTSET</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
+
+    <span class="c1"># read station list</span>
+    <span class="k">global</span> <span class="n">station_list</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">station_list</span>
+    <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+        <span class="n">station_list</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">station_list_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;General&#39;</span><span class="p">,</span> <span class="s1">&#39;station_list&#39;</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">station_list_path</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">station</span><span class="p">:</span>
+                    <span class="n">num</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">password</span> <span class="o">=</span> <span class="n">station</span>
+                    <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+                    <span class="n">station_list</span><span class="p">[</span><span class="n">num</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">cluster</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="store_data">
+<a class="viewcode-back" href="../../wsgi.html#wsgi.wsgi_app.store_data">[docs]</a>
+<span class="k">def</span> <span class="nf">store_data</span><span class="p">(</span><span class="n">station_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">event_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store verified event data to temporary storage&quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Storing data for station </span><span class="si">{</span><span class="n">station_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">data_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;General&#39;</span><span class="p">,</span> <span class="s1">&#39;data_dir&#39;</span><span class="p">))</span>
+
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s1">&#39;incoming&#39;</span>
+    <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s1">&#39;tmp&#39;</span>
+
+    <span class="k">if</span> <span class="n">is_data_suspicious</span><span class="p">(</span><span class="n">event_list</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Event list marked as suspicious.&#39;</span><span class="p">)</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s1">&#39;suspicious&#39;</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Filename: </span><span class="si">{</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;station_id&#39;</span><span class="p">:</span> <span class="n">station_id</span><span class="p">,</span> <span class="s1">&#39;cluster&#39;</span><span class="p">:</span> <span class="n">cluster</span><span class="p">,</span> <span class="s1">&#39;event_list&#39;</span><span class="p">:</span> <span class="n">event_list</span><span class="p">}</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+    <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_data_suspicious">
+<a class="viewcode-back" href="../../wsgi.html#wsgi.wsgi_app.is_data_suspicious">[docs]</a>
+<span class="k">def</span> <span class="nf">is_data_suspicious</span><span class="p">(</span><span class="n">event_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check data for suspiciousness</span>
+
+<span class="sd">    Suspiciousness, a previously unknown quantum number that may signify</span>
+<span class="sd">    the actual birth of the universe and the reweaving of past fates into</span>
+<span class="sd">    current events has come to hunt us and our beloved data.</span>
+
+<span class="sd">    Note: Apr 7, 2019 0:00 is the default time after a cold start without GPS signal.</span>
+<span class="sd">    The DAQ will happily send events even when no GPS signal has been</span>
+<span class="sd">    acquired (yet). Events with timestamp Apr 7, 2019 are most probably caused</span>
+<span class="sd">    by no or bad GPS signal. Such events must be eigenstates of suspiciousness.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">event_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">][</span><span class="s1">&#39;datetime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">year</span> <span class="o">&lt;</span> <span class="n">MINIMUM_YEAR</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Date &lt; 2020: Timestamp has high suspiciousness.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="decode_object">
+<a class="viewcode-back" href="../../wsgi.html#wsgi.wsgi_app.decode_object">[docs]</a>
+<span class="k">def</span> <span class="nf">decode_object</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;recursively decode all bytestrings in object&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">decode_object</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">decode_object</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">o</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">decode_object</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">o</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">o</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/header.png" alt="Logo of HiSPARC-datastore"/>
+            </a></p>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HiSPARC-datastore 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">wsgi.wsgi_app</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017, David Fokkema, Arne de Laat, Tom Kooij.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>
